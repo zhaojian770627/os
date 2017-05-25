@@ -158,7 +158,7 @@ begin:
 
 ;;; ==========================================================================
 section data_1 align=16 vstart=0
-             msg0 db '  This is NASM - the famous Netwide Assembler. '
+         msg0 db '  This is NASM - the famous Netwide Assembler. '
          db 'Back at SourceForge and in intensive development! '
          db 'Get the current versions from http://www.nasm.us/.'
          db 0x0d,0x0a,0x0d,0x0a
