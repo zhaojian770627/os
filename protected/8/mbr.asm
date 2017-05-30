@@ -66,9 +66,22 @@ direct:
 
 ;;; ======================================================
 read_floppy_disk_0:		;从软盘读取一个逻辑扇区
+	push 	ax
+	push	bx
 	push	cx
 	push	dx
 	push	si
+
+	;;运算柱面 
+	mov	ax,_readsecs
+	add	ax,_startsec
+	mov	bx,0x12
+	div	bx
+	cmp 	dx,0
+	jz	no_remained
+	inc	ax
+no_remained:	
+	mov	[_cyls],ax
 	
 	mov	ch,0		;注面
 	mov	dh,0		;磁头0
@@ -108,10 +121,16 @@ next:
 	add	ch,1
 	cmp	ch,_cyls
 	jb	readloop
+	jmp	rexit
 err:	
 	mov	byte[_errno],1
+rexit:
 	
-	
+	push 	si
+	push	dx
+	push	cx
+	push	bx
+	push	ax
 	ret
 
 error:
