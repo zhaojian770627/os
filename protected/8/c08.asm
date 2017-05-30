@@ -182,8 +182,8 @@ section data_2 align=16 vstart=0
          db 0
 ;;; ===============================================
 section stack align=16 vstart=0
-	resb	256
+	resb	256 
 stack_end:
 ;;; ========================================================================
 section trail align=16
-	program_end
+program_end:	
