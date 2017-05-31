@@ -71,7 +71,9 @@ read_floppy_disk_0:		;从软盘读取一个逻辑扇区
 	push	cx
 	push	dx
 	push	si
+	push	di
 
+	xor 	di,di
 	;;运算柱面 
 	mov	ax,_readsecs
 	add	ax,_startsec
@@ -105,13 +107,14 @@ retry:
 
 next:
 	;; 需要比较总扇区数
-
-	
+	inc	di
+	cmp	di,[_readsecs]
+	je	rexit	
 	mov	ax,es
 	add	ax,0x0020
 	mov	es,ax		
 	add	cl,1
-	add	cl,18
+	cmp	cl,18
 	jbe	readloop	;如果cl<=18,则跳至readlloop
 	mov	cl,1
 	add	dh,1
@@ -125,12 +128,12 @@ next:
 err:	
 	mov	byte[_errno],1
 rexit:
-	
-	push 	si
-	push	dx
-	push	cx
-	push	bx
-	push	ax
+	pop	di
+	pop 	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
 	ret
 
 error:
