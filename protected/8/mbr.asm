@@ -74,20 +74,20 @@ read_floppy_disk_0:		;从软盘读取一个逻辑扇区
 	push	di
 
 	xor 	di,di
-	;;运算柱面 
-	mov	ax,_readsecs
-	add	ax,_startsec
+
+	mov	ax,_startsec
+	dec	ax
 	mov	bx,0x12
 	div	bx
-	cmp 	dx,0
-	jz	no_remained
-	inc	ax
-no_remained:	
-	mov	[_cyls],ax
-	
-	mov	ch,0		;注面
-	mov	dh,0		;磁头0
-	mov	cl,_startsec	;起始扇区
+
+	mov	cl,dx		;扇区
+	inc	cl
+
+	mov	bx,0x2
+	div	bx
+
+	mov	ch,al		;注面
+	mov	dh,dl		;磁头0
 readloop:	
 	mov	si,0		;记录失败次数的寄存器
 retry:	
