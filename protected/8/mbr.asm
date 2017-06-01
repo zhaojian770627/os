@@ -125,9 +125,7 @@ next:
 	jb	readloop
 	mov	dh,0
 	add	ch,1
-	cmp	ch,_cyls
-	jb	readloop
-	jmp	rexit
+	jmp	readloop
 err:	
 	mov	byte[_errno],1
 rexit:
