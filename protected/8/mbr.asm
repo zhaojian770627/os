@@ -77,12 +77,15 @@ read_floppy_disk_0:		;从软盘读取一个逻辑扇区
 
 	mov	ax,_startsec
 	dec	ax
+	xor	dx,dx
 	mov	bx,0x12
 	div	bx
 
-	mov	cl,dx		;扇区
+	mov	cl,dl		;扇区
 	inc	cl
 
+	xor 	dx,dx
+	
 	mov	bx,0x2
 	div	bx
 
