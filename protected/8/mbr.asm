@@ -62,7 +62,9 @@ start:
 
 	;; 计算入口点代码段基址
 direct:
-	jmp 	$		;暂时结束
+	mov     ax,cs
+	mov	ds,ax
+	jmp     loadok		;暂时结束
 
 ;;; ======================================================
 read_floppy_disk_0:		;从软盘读取一个逻辑扇区
@@ -137,8 +139,11 @@ rexit:
 	pop	ax
 	ret
 
+loadok:
+	mov	si,okmsg
+	jmp	putloop
 error:
-	mov 	si,msg
+	mov 	si,errmsg
 putloop:
 	mov 	al,[si]
 	add	si,1
@@ -151,7 +156,12 @@ putloop:
 fin:
 	hlt
 	jmp	fin
-msg:
+okmsg:
+	db	0x0a,0x0a
+	db	"load ok"
+	db	0x0a
+	db	0
+errmsg:
 	db	0x0a,0x0a
 	db	"load error"
 	db	0x0a
