@@ -16,50 +16,29 @@ start:
 	mov	ss,ax
 	mov	sp,ax
 
+	mov	ax,cs
+	mov	ds,ax
+
 	mov	ax,[cs:phy_base] ;计算用于加载用户程序的逻辑段地址
 	mov	dx,[cs:phy_base+0x02]
 	mov	bx,16
 	div	bx
-	mov	ds,ax		;令DS和ES指向该段以进行操作
 	mov	es,ax
 
 	;; 以下读取程序的起始部分
-	xor	di,di
-	mov	si,app_floppy_start ;程序在硬盘上的起始逻辑扇区号
 	xor	bx,bx		    ;加载到DS:0x0000处
-	call	read_floppy_disk_0
 
+	mov    	byte[_startsec],0x2	;第2个扇区
+	mov 	byte[_readsecs],0x1	;读取一个
+	call	read_floppy_disk_0
 	;; 以下判断整个程序有多大
+	mov	ax,es
+	mov	ds,ax
+	
 	mov	dx,[2]		;
 	mov	ax,[0]
-	mov	bx,512		;512字节每扇区
-	div	bx
-	cmp	dx,0		
-	jnz	@1		;未除近，因此结果比实际扇区少1
-	dec	ax		;已经读了一个扇区,扇区总数减1
-@1:
-	cmp	ax,0		;考虑实际长度小于等于512个字节的情况
-	jz	direct
 
-	;; 读取剩余的扇区
-	push	ds		;以下要用到并改变DS寄存器
-
-	mov	cx,ax		;循环次数
-@2:
-	mov	ax,ds
-	add	ax,0x20		;得到下一个以512字节为边界的段地址
-	mov	ds,ax
-
-	xor	bx,bx		;每次读时，偏移地址始终为0x0000
-	inc	si		;下一个逻辑扇区
-	mov	byte[_errno],0
-	call	read_floppy_disk_0
-	cmp	byte[_errno],0
-	jne	error
-	loop 	@2		;循环读，直到读完整个功能程序
-
-	pop	ds
-
+	
 	;; 计算入口点代码段基址
 direct:
 	mov     ax,cs
@@ -77,7 +56,7 @@ read_floppy_disk_0:		;从软盘读取一个逻辑扇区
 
 	xor 	di,di
 
-	mov	ax,_startsec
+	mov	ax,[_startsec]
 	dec	ax
 	xor	dx,dx
 	mov	bx,0x12
