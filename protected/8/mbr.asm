@@ -71,7 +71,7 @@ read_floppy_disk_0:		;从软盘读取一个逻辑扇区
 
 	xor 	di,di
 
-	mov	ax,[_startsec]
+	mov	ax,[cs:_startsec]
 	dec	ax
 	xor	dx,dx
 	mov	bx,0x12
@@ -107,7 +107,7 @@ retry:
 next:
 	;; 需要比较总扇区数
 	inc	di
-	cmp	di,[_readsecs]
+	cmp	di,[cs:_readsecs]
 	je	rexit	
 	mov	ax,es
 	add	ax,0x0020
