@@ -37,7 +37,22 @@ start:
 	
 	mov	dx,[2]		;
 	mov	ax,[0]
+	mov	bx,0x200	;每扇区512字节
+	div	bx
+	cmp	dx,0
+	jnz	@1
+	dec	ax
+@1:
+	cmp	ax,0
+	jz	direct
 
+	;; 读取剩余的扇区，
+	mov	byte[cs:_startsec],0x3 ;第三个扇区
+	mov	word[cs:_readsecs],ax
+	mov 	ax,es
+	add	ax,0x20
+	mov	es,ax
+	call	read_floppy_disk_0
 	
 	;; 计算入口点代码段基址
 direct:
