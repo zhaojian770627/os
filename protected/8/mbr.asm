@@ -28,12 +28,12 @@ start:
 	;; 以下读取程序的起始部分
 	xor	bx,bx		    ;加载到DS:0x0000处
 
-	mov    	byte[_startsec],0x2	;第2个扇区
-	mov 	byte[_readsecs],0x1	;读取一个
+	mov    	byte[cs:_startsec],0x2	;第2个扇区
+	mov 	byte[cs:_readsecs],0x1	;读取一个
 	call	read_floppy_disk_0
 	;; 以下判断整个程序有多大
-	mov	ax,es
-	mov	ds,ax
+	push 	es
+	pop	ds
 	
 	mov	dx,[2]		;
 	mov	ax,[0]
@@ -56,9 +56,26 @@ start:
 	
 	;; 计算入口点代码段基址
 direct:
-	mov     ax,cs
-	mov	ds,ax
-	jmp     loadok		;暂时结束
+	;; 计算入口点代码段基址
+	;;
+	mov	dx,[0x08]	;ds 为用户程序所加载到地址，一直没有变过
+	mov	ax,[0x06]
+	call	calc_segment_base
+	mov	[0x06],ax	;回填修正后的入口代码段基址
+
+	;; 开始处理段重定位表
+	mov	cx,[0x0a]	;需要重定位的项目数量
+	mov	bx,0x0c		;重定位表首地址
+
+realloc:
+	mov	dx,[bx+0x02]	;32位地址的高16位
+	mov	ax,[bx]
+	call	calc_segment_base
+	mov	[bx],ax		;回填段的基址
+	add	bx,4		;下一个重定位项
+	loop	realloc
+
+	jmp	far[0x04]
 
 ;;; ======================================================
 read_floppy_disk_0:		;从软盘读取一个逻辑扇区
@@ -123,7 +140,7 @@ next:
 	add	ch,1
 	jmp	readloop
 err:	
-	mov	byte[_errno],1
+	mov	byte[cs:_errno],1
 rexit:
 	pop	di
 	pop 	si

@@ -146,7 +146,7 @@ continue:
 	mov	bx,msg1
 	call	put_string
 
-	jmp	$
+	halt
 
 section code_2 align=16 vstart=0
 begin:
