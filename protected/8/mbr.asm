@@ -75,6 +75,10 @@ realloc:
 	add	bx,4		;下一个重定位项
 	loop	realloc
 
+	;; 还原es,和ds一样,用户程序用的着
+	push	ds
+	pop	es
+
 	jmp	far[0x04]
 
 ;;; ======================================================
@@ -149,7 +153,22 @@ rexit:
 	pop	bx
 	pop	ax
 	ret
+;;; ------------------------------------------------------
+calc_segment_base:		;计算16位段地址
+	;; 输入:DX:AX=32位物理地址
+	;; 返回:AX=16位段基地址
+	push 	dx
+	add	ax,[cs:phy_base]
+	add	dx,[cs:phy_base+0x02]
+	shr	ax,4
+	ror	dx,4
+	and 	dx,0xf000
+	or	ax,dx
 
+	pop	dx
+	ret
+;;; -----------------------------------------------------
+	
 loadok:
 	mov	si,okmsg
 	jmp	putloop

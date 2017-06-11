@@ -42,7 +42,7 @@ put_char:			;显示一个字读
 
 	;; 以下取当前光标位置
 	mov	dx,0x3d4
-	mov	al,0x03
+	mov	al,0x0e
 	out	dx,al
 	mov	dx,0x3d5
 	in	al,dx		;高8位
