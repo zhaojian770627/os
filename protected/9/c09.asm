@@ -3,20 +3,20 @@ section header vstart=0		;定义用户程序头部段
 
 	;; 用户程序的入口点
 	code_entry	dw	start ;偏移地址[0x04]
-			dd	section.code_1.start ;段地址[0x06]
+			dd	section.code.start ;段地址[0x06]
 
 	;; 段重定位表项个数
-	realloc_tbl_len	dw	(header_end - code_1_segment)/4 ;[0x0a]
+	realloc_tbl_len	dw	(header_end - code_segment)/4 ;[0x0a]
 
 	;; 段重定位表
-	code_1_segment	dd	section.code_1.start ;[0x0c]
-	data_1_segment	dd	section.data_1.start ;[0x10]
+	code_segment	dd	section.code.start ;[0x0c]
+	data_segment	dd	section.data.start ;[0x10]
 	stack_segment	dd	section.stack.start  ;[0x14]
 
 header_end:
 
 	;; ================================================================
-section code_1 align=16 vstart=0 ;定义代码段1(16字节对齐)
+section code align=16 vstart=0 ;定义代码段1(16字节对齐)
 new_int_0x70:
 	push	ax
 	push	bx
@@ -57,7 +57,7 @@ new_int_0x70:
 	mov	es,ax
 
 	pop	ax
-	call	bcd_to_assii
+	call	bcd_to_ascii
 	mov	bx,12*168+36*2	;从屏幕的12行36列开始显示
 
 	mov	[es:bx],ah
@@ -68,7 +68,7 @@ new_int_0x70:
 	not	byte[es:bx+5]	;反转显示属性
 
 	pop	ax
-	call 	bcd_to_assii
+	call 	bcd_to_ascii
 	mov	[es:bx+6],ah
 	mov	[es:bx+8],al	;显示两位分钟数字
 
@@ -77,7 +77,7 @@ new_int_0x70:
 	not 	byte[es:bx+11]	;反转显示属性
 
 	pop	ax
-	call 	bcd_to_assii
+	call 	bcd_to_ascii
 	mov	[es:bx+12],ah
 	mov	[es:bx+14],al	;显示两位秒数字
 
@@ -108,14 +108,29 @@ bcd_to_ascii:
 	ret
 		
 ;;;--------------------------------------------------------------
+%include "lib.inc"
 start:
+	mov	ax,[stack_segment]
+	mov	ss,ax
+	mov	sp,ss_pointer
+	mov	ax,[data_segment]
+	mov	ds,ax
+
+	mov	bx,init_msg	;显示初始信息
+	call	put_string
+	
 	hlt
 ;;; ==========================================================================
-section data_1 align=16 vstart=0
-
+section data align=16 vstart=0
+	init_msg	db 'Starting...',0x0d,0x0a,0
+	inst_msg	db 'Installing a new interrupt 70H...',0
+	done_msg	db 'Done.',0x0d,0x0a,0
+	tips_msg	db 'Clock is now working.',0
+	
 ;;; ===============================================
 section stack align=16 vstart=0
-	resb	256 
+	resb	256
+ss_pointer:	
 stack_end:
 ;;; ========================================================================
 section trail align=16
