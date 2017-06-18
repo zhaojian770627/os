@@ -143,7 +143,7 @@ start:
 	out	0x71,al		;新结束后中断，BCD码，24小时制
 
 	mov	al,0x0c
-	out 	0x70
+	out 	0x70,al
 	in	al,0x71		;读RTC寄存器C，复位未决的中断状态
 
 
