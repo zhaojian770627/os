@@ -10,6 +10,7 @@ blank.img:
 mbr.bin:
 	nasm -f bin mbr.asm -o mbr.bin -l mbr.lst
 c09.bin:
-	nasm -f bin c09.asm -o c09.bin -l c09.lst
+	#nasm -f bin c09.asm -o c09.bin -l c09.lst
+	nasm -f bin c09_2.asm -o c09.bin -l c09.lst
 clean:
 	$(RM) *.img *.bin *.sys *.o  *.lst *.txt
