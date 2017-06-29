@@ -27,7 +27,7 @@ int getchoice(char *greet,char *choices[])
   char **option;
 
   do{
-    printf("Choice:%s\n",*option);
+    printf("Choice:%s\n",greet);
     option=choices;
     while(*option){
       printf("%s\n",*option);
