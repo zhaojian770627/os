@@ -1,0 +1,210 @@
+;-------------------------------------------------------------------------------
+put_string:                              ;显示串(0结尾)。
+                                         ;输入：DS:BX=串地址
+	 push ecx
+.getc:
+         mov cl,[ebx]
+         or cl,cl                        ;cl=0 ?
+         jz .exit                        ;是的，返回主程序 
+         call put_char
+         inc bx                          ;下一个字符 
+         jmp .getc
+
+   .exit:
+         pop ecx
+         retf
+
+;-------------------------------------------------------------------------------
+put_char:                                ;显示一个字符
+                                         ;输入：cl=字符ascii
+         pushad
+
+         ;以下取当前光标位置
+         mov dx,0x3d4
+         mov al,0x0e
+         out dx,al
+	 inc dx
+         in al,dx                        ;高8位 
+         mov ah,al
+
+         dec dx				 ;0x3d4
+         mov al,0x0f
+         out dx,al
+         inc dex			 ;0x3d5
+         in al,dx                        ;低8位 
+         mov bx,ax                       ;BX=代表光标位置的16位数
+
+         cmp cl,0x0d                     ;回车符？
+         jnz .put_0a                     ;不是。看看是不是换行等字符 
+         mov ax,bx                       ; 
+         mov bl,80                       
+         div bl
+         mul bl
+         mov bx,ax
+         jmp .set_cursor
+
+ .put_0a:
+         cmp cl,0x0a                     ;换行符？
+         jnz .put_other                  ;不是，那就正常显示字符 
+         add bx,80
+         jmp .roll_screen
+
+ .put_other:                             ;正常显示字符
+         push es
+	 mov eax,video_ram_seg_sel	 ;0xb8000段的选择子
+         mov es,eax
+         shl bx,1
+         mov [es:bx],cl
+	 pop es
+
+         ;以下将光标位置推进一个字符
+         shr bx,1
+         add bx,1
+
+ .roll_screen:
+         cmp bx,2000                     ;光标超出屏幕？滚屏
+         jl .set_cursor
+
+	 push ds
+	 push es
+         mov eax,video_ram_seg_sel
+         mov ds,eax
+         mov es,eax
+         cld
+
+         mov esi,0xa0			;小心！32位模式下movsb/w/d
+         mov edi,0x00			;使用的是esi/edi/ecx
+         mov ecx,1920
+         rep movsd
+         mov bx,3840                     ;清除屏幕最底一行
+         mov ecx,80			 ;32位程序应该使用ECX
+ .cls:
+         mov word[es:bx],0x0720
+         add bx,2
+         loop .cls
+
+	 pop  es
+	 pop  ds
+
+         mov bx,1920
+
+ .set_cursor:
+         mov dx,0x3d4
+         mov al,0x0e
+         out dx,al
+         inc dx				;0x3d5
+         mov al,bh
+         out dx,al
+         dec dx				;0x3d4
+         mov al,0x0f
+         out dx,al
+         inc dx				;0x3d5
+         mov al,bl
+         out dx,al
+
+         popad
+         ret
+;----------------------------------------------------------------------------
+	;; 从软盘读取逻辑扇区
+	;; EAX=起始扇区号
+	;; ECX=读取扇区数	
+	;; ES:EBX=目标缓冲区地址
+read_floppy_disk:		;从软盘读取一个逻辑扇区
+	push	edx
+	push	esi
+	push	edi
+
+	push	ecx	
+	push 	ebx
+	
+	xor 	edi,edi
+
+	dec	ax
+	xor	edx,edx
+	mov	bx,0x12
+	div	bx
+
+	mov	cl,dl		;扇区
+	inc	cl
+
+	xor	dx,dx
+
+	mov	bx,0x2
+	div	bx
+
+	mov	ch,al		;柱面
+	mov	dh,dl		;磁头0
+
+	pop	ebx
+readloop:
+	mov	si,0		;记录失败次数的寄存器
+retry:
+	mov	ah,0x02		;ah=0x02 读入磁盘
+	mov	al,1		;一个扇区
+	mov	dl,0x00		;A驱动器
+	int	0x13h
+	jnc	next		;No error
+	inc	si
+	cmp	si,5
+	jae	err
+	mov	ah,0x00
+	mov	dl,0x00
+	int 	0x13
+	jmp	retry
+next:
+	inc	di
+	pop	ecx
+	cmp	di,cx
+	je	rexit
+	push	ecx
+	add	ebx,0x0200
+	add	cl,1
+	cmp	cl,18
+	jbe	readloop
+	mov	cl,1
+	add	dh,1
+	cmp	dh,2
+	jb	readloop
+	mov	dh,0
+	add	ch,1
+	jmp	readloop
+err:
+	pop	ecx
+	mov	ecx,1
+rexit:
+	pop	edi
+	pop	esi
+	pop	edi
+
+	retf
+;;; ------------------------------------------------------------
+;;; 汇编语言程序是极难一次成功，而且调试非常困难。这个例程可以提供帮助
+;;; 在当前光标处以十六进制形式显示一个双字并推进光标
+;;; 输入:EDX=要转换并显示的数字
+;;; 输出:无
+put_hex_dword:
+	pushad
+	push	ds
+
+	mov	ax,core_data_seg_sel ;切换到核心数据段
+	mov	ds,ax
+
+	mov	ebx,bin_hex	;指向核心数据段内的转换表
+	mov	ecx,8
+.xlt:
+	rol	edx,4
+	mov	eax,edx
+	and 	eax,0x0000000f
+	xlat
+
+	push	ecx
+	mov	cl,al
+	call	put_char
+	pop	ecx
+
+	loop	.xlt
+
+	pop	ds
+	popad
+	retf
+;;; -----------------------------------------------------------
