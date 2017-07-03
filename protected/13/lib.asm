@@ -105,79 +105,6 @@ put_char:                                ;显示一个字符
          popad
          ret
 ;----------------------------------------------------------------------------
-	;; 从软盘读取逻辑扇区
-	;; EAX=起始扇区号
-	;; ECX=读取扇区数	
-	;; ES:EBX=目标缓冲区地址
-read_floppy_disk:		;从软盘读取一个逻辑扇区
-	push	edx
-	push	esi
-	push	edi
-
-	push	ecx	
-	push 	ebx
-	
-	xor 	edi,edi
-
-	dec	ax
-	xor	edx,edx
-	mov	bx,0x12
-	div	bx
-
-	mov	cl,dl		;扇区
-	inc	cl
-
-	xor	dx,dx
-
-	mov	bx,0x2
-	div	bx
-
-	mov	ch,al		;柱面
-	mov	dh,dl		;磁头0
-
-	pop	ebx
-readloop:
-	mov	si,0		;记录失败次数的寄存器
-retry:
-	mov	ah,0x02		;ah=0x02 读入磁盘
-	mov	al,1		;一个扇区
-	mov	dl,0x00		;A驱动器
-	int	0x13h
-	jnc	next		;No error
-	inc	si
-	cmp	si,5
-	jae	err
-	mov	ah,0x00
-	mov	dl,0x00
-	int 	0x13
-	jmp	retry
-next:
-	inc	di
-	pop	ecx
-	cmp	di,cx
-	je	rexit
-	push	ecx
-	add	ebx,0x0200
-	add	cl,1
-	cmp	cl,18
-	jbe	readloop
-	mov	cl,1
-	add	dh,1
-	cmp	dh,2
-	jb	readloop
-	mov	dh,0
-	add	ch,1
-	jmp	readloop
-err:
-	pop	ecx
-	mov	ecx,1
-rexit:
-	pop	edi
-	pop	esi
-	pop	edi
-
-	retf
-;;; ------------------------------------------------------------
 ;;; 汇编语言程序是极难一次成功，而且调试非常困难。这个例程可以提供帮助
 ;;; 在当前光标处以十六进制形式显示一个双字并推进光标
 ;;; 输入:EDX=要转换并显示的数字
@@ -261,4 +188,26 @@ set_up_gdt_descriptor:
 	inc	bx		;GDT总字节数，也是下一个描述符偏移
 	add	ebx,[pgdt+2]	;下一个描述符的线性地址
 
-	
+	mov	[es:ebx],eax
+	mov	[es:ebx+4],edx
+
+	add	word[pgdt],8	;增加一个描述符的大小
+
+	lgdt	[pgdt]		;对GDT的更改生效
+
+	mov	ax,[pgdt]	;得到GDT界限值
+	xor	dx,dx
+	mov	bx,8
+	div	bx		;除以8,去掉余数
+	mov	cx,ax
+	shl	cx,3		;将索引号移到正确位置
+
+	pop	es
+	pop	ds
+
+	pop	edx
+	pop	ebx
+	pop	eax
+
+	retf
+;;; --------------------------------------------------------------
