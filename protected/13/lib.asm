@@ -208,3 +208,57 @@ put_hex_dword:
 	popad
 	retf
 ;;; -----------------------------------------------------------
+	;; 分配内存
+	;; 输入:ECX=希望分配的字节书
+	;; 输出:ECX=起始线性地址
+allocate_memory:
+	push	ds
+	push	eax
+	push	ebx
+
+	mov	eax,core_data_seg_sel
+	mov	ds,eax
+
+	mov	eax,[ram_alloc]
+	add	eax,ecx		;下次分配时的起始地址
+
+	;; 这里应当有检测可用内存数量的指令
+	mov	ecx,[ram_alloc]	;返回分配的起始地址
+
+	mov	ebx,eax
+	add	ebx,0xfffffffc
+	add	ebx,4		;强制对齐
+	test 	eax,0x00000003	;下次分配的起始地址最好是4字节对齐
+	cmovnz	eax,ebx		;如果没有对齐，则强制对齐
+	mov	[ram_alloc],eax	;下次从该地址分配内存，cmovcc指令可以避免控制转移
+
+	pop	ebx
+	pop	eax
+	pop	es
+
+	retf
+;;; --------------------------------------------------------------------------
+	;; 在GDT内安装一个新的描述符
+	;; 输入:EDX:EAX=描述符
+	;; 输出:CX=描述符的选择子
+set_up_gdt_descriptor:
+	push	eax
+	push	ebx
+	push 	edx
+
+	push	ds
+	push	es
+
+	mov	ebx,core_data_seg_sel ;切换到核心数据段
+	mov	ds,ebx
+
+	sgdt	[psdt]		;以便开始处理GDT
+
+	mov	ebx,mem_0_4_gb_seg_sel
+	mov	es,ebx
+
+	movzx	ebx,word[pgdt]	;GDT界限
+	inc	bx		;GDT总字节数，也是下一个描述符偏移
+	add	ebx,[pgdt+2]	;下一个描述符的线性地址
+
+	
