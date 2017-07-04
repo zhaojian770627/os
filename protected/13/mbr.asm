@@ -29,4 +29,5 @@
 	mov	dword[ebx+0x1c],0x00cf9600 ;粒度为4KB
 
 	
-	
+	mov	dword[ebx+0x20],0x80007fff ;基地址为0x000B8000,界限位0x07fff
+	mov	dword[ebx+0x24],0x0040920b ;粒度为字节
