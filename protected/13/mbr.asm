@@ -31,3 +31,68 @@
 	
 	mov	dword[ebx+0x20],0x80007fff ;基地址为0x000B8000,界限位0x07fff
 	mov	dword[ebx+0x24],0x0040920b ;粒度为字节
+
+	;; 初始化描述符表寄存器GDTR
+	mov	word[cs:pdgt+0x7c00],39 ;描述符的界限
+
+	lgdt	[cs:pdgt+0x7c00]
+
+	in	al,0x92		;南桥芯片内的端口
+	or	al,0000_0010B	
+	out	0x92,al		;打开A20
+
+	cli			;中断机制尚未工作
+
+	mov	eax,cr0
+	or	eax,1
+	mov	cr0,eax		;设置PE位
+
+	;; 以下进入保护模式......
+	jmp	dowrd 0x0010:flush ;16位描述符选择子:32位偏移
+
+	[bits 32]
+flush:
+	mov	eax,0x0008	;加载数据段(0..4GB)选择子
+	mov	ds,eax
+	mov	es,eax		;读扇区用
+	
+	mov	eax,0x0018	;加载堆栈段选择子
+	mov	ss,eax
+	xor	esp,esp
+
+	;; 以下加载系统核心程序
+	mov	edi,core_base_address
+
+	mov	eax,core_start_sector
+	mov	ebx,edi		;起始部分
+	call 	read_floppy_disk ;以下读取程序的起始部分(一个扇区)
+
+	;; 以下判断整个程序多大
+	mov	eax,[edi]	;核心程序尺寸
+	xor	edx,edx
+	mov	ecx,512		;512字节每扇区
+	div	ecx
+
+	or 	edx,edx
+	jnz	@1		;未除尽，因此结果比实际扇区数少1
+	dec	eax		;已经读了一个扇区，扇区总数减1
+@1：
+	or	eax,eax		;考虑实际长度<=512个字节的情况
+	jz	setup		;EAX=0?
+
+	;; 读取剩余的扇区
+	mov	ecx,eax
+	mov	eax,core_start_sector
+	inc	eax		;从下一个逻辑扇区接着读
+
+	call	read_floppy_disk
+setup:
+	hlt
+;;; ------------------------------------------------------------------
+%include "readdisk.asm"
+;;; -------------------------------------------------------------------
+	pgdt	dw	0
+		dd	0x00007e00 ;GDT的物理地址
+;;; -------------------------------------------------------------------
+	times	510-($-$$) db 0
+			   db 0x55,0xaa
