@@ -33,9 +33,9 @@
 	mov	dword[ebx+0x24],0x0040920b ;粒度为字节
 
 	;; 初始化描述符表寄存器GDTR
-	mov	word[cs:pdgt+0x7c00],39 ;描述符的界限
+	mov	word[cs:pgdt+0x7c00],39 ;描述符的界限
 
-	lgdt	[cs:pdgt+0x7c00]
+	lgdt	[cs:pgdt+0x7c00]
 
 	in	al,0x92		;南桥芯片内的端口
 	or	al,0000_0010B	
@@ -48,7 +48,7 @@
 	mov	cr0,eax		;设置PE位
 
 	;; 以下进入保护模式......
-	jmp	dowrd 0x0010:flush ;16位描述符选择子:32位偏移
+	jmp	dword 0x0010:flush ;16位描述符选择子:32位偏移
 
 	[bits 32]
 flush:
@@ -76,7 +76,7 @@ flush:
 	or 	edx,edx
 	jnz	@1		;未除尽，因此结果比实际扇区数少1
 	dec	eax		;已经读了一个扇区，扇区总数减1
-@1：
+@1:
 	or	eax,eax		;考虑实际长度<=512个字节的情况
 	jz	setup		;EAX=0?
 

@@ -35,7 +35,7 @@ retry:
 	mov	ah,0x02		;ah=0x02 读入磁盘
 	mov	al,1		;一个扇区
 	mov	dl,0x00		;A驱动器
-	int	0x13h
+	int	0x13
 	jnc	next		;No error
 	inc	si
 	cmp	si,5
