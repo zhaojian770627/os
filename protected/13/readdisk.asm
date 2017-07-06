@@ -3,17 +3,17 @@
 	;; ECX=读取扇区数	
 	;; ES:EBX=目标缓冲区地址
 read_floppy_disk:		;从软盘读取一个逻辑扇区
-	push	edx
-	push	esi
-	push	edi
+	push	dx
+	push	si
+	push	di
 
-	push	ecx	
-	push 	ebx
+	push	cx	
+	push 	bx
 	
-	xor 	edi,edi
+	xor 	di,di
 
 	dec	ax
-	xor	edx,edx
+	xor	dx,dx
 	mov	bx,0x12
 	div	bx
 
@@ -28,7 +28,7 @@ read_floppy_disk:		;从软盘读取一个逻辑扇区
 	mov	ch,al		;柱面
 	mov	dh,dl		;磁头0
 
-	pop	ebx
+	pop	bx
 readloop:
 	mov	si,0		;记录失败次数的寄存器
 retry:
@@ -46,11 +46,11 @@ retry:
 	jmp	retry
 next:
 	inc	di
-	pop	ecx
+	pop	cx
 	cmp	di,cx
 	je	rexit
-	push	ecx
-	add	ebx,0x0200
+	push	cx
+	add	bx,0x0200
 	add	cl,1
 	cmp	cl,18
 	jbe	readloop
@@ -62,11 +62,11 @@ next:
 	add	ch,1
 	jmp	readloop
 err:
-	pop	ecx
-	mov	ecx,1
+	pop	cx
+	mov	cx,1
 rexit:
-	pop	edi
-	pop	esi
-	pop	edi
+	pop	di
+	pop	si
+	pop	dx
 
-	retf
+	ret
