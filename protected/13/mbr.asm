@@ -1,3 +1,4 @@
+	
 	;; 软盘主引导扇区代码
 	core_base_address equ 0x00040000 ;常数,内核加载的起始内存地址
 	core_start_sector equ 0x00000002 ;常数,内核的起始逻辑扇区号
@@ -8,8 +9,8 @@
 	mov	sp,0x7c00
 
 	;; 在实模式下加载核心程序，进入保护模式下，就不能调用BIOS代码，以现有的知识能力
-	mov	ax,[cs:phy_base]
-	mov	dx,[cs:phy_base+0x02]
+	mov	ax,[cs:phy_base+0x7c00]
+	mov	dx,[cs:phy_base+0x7c00+0x02]
 	mov	bx,16
 	div	bx
 	mov	es,ax
@@ -41,8 +42,13 @@
 	inc	eax		;从下一个逻辑扇区接着读
 
 	call	read_floppy_disk
-
 @2:
+	mov	ax,cs
+	mov	es,ax
+	mov	ds,ax
+
+	mov 	ax,0x7c00+init_msg
+	call 	dispstr
 	;; 计算GDT所在的逻辑段地址
 	mov	eax,[cs:pgdt+0x7c00+0x02] ;GDT的32位物理地址
 	xor	edx,edx
@@ -88,6 +94,14 @@
 	jmp	dword 0x0010:flush ;16位描述符选择子:32位偏移
 ;;; ------------------------------------------------------------------
 %include "readdisk.asm"
+dispstr:
+	mov	bp,ax		;ES:BP= string address
+	mov	cx,16		;CX= string length
+	mov	ax,01301h	;AH=13,AL=01h
+	mov	bx,000ch	;Page 0(BH=0) background black font red
+	mov	dl,0
+	int 	10h
+	ret
 ;;; -------------------------------------------------------------------
 	[bits 32]
 flush:
@@ -98,27 +112,6 @@ flush:
 	mov	eax,0x0018	;加载堆栈段选择子
 	mov	ss,eax
 	xor	esp,esp
-
-
-	;; 以下判断整个程序多大
-	mov	eax,[edi]	;核心程序尺寸
-	xor	edx,edx
-	mov	ecx,512		;512字节每扇区
-	div	ecx
-
-	or 	edx,edx
-	jnz	@1		;未除尽，因此结果比实际扇区数少1
-	dec	eax		;已经读了一个扇区，扇区总数减1
-@1:
-	or	eax,eax		;考虑实际长度<=512个字节的情况
-	jz	setup		;EAX=0?
-
-	;; 读取剩余的扇区
-	mov	ecx,eax
-	mov	eax,core_start_sector
-	inc	eax		;从下一个逻辑扇区接着读
-
-	call	read_floppy_disk
 setup:
 	hlt
 
@@ -126,6 +119,8 @@ setup:
 	pgdt	dw	0
 		dd	0x00007e00 ;GDT的物理地址
 	phy_base dd	0x40000	   ;内核程序加载到的物理地址，对应余于常数core_base_addres
+	init_msg	db "Starting..."
+
 ;;; -------------------------------------------------------------------
 	times	510-($-$$) db 0
 			   db 0x55,0xaa
