@@ -45,7 +45,6 @@
 @2:
 	mov	ax,cs
 	mov	es,ax
-	mov	ds,ax
 
 	mov 	ax,0x7c00+init_msg
 	call 	dispstr
