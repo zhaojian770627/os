@@ -48,7 +48,7 @@ put_char:                                ;显示一个字符
          dec dx				 ;0x3d4
          mov al,0x0f
          out dx,al
-         inc dex			 ;0x3d5
+         inc dx			 ;0x3d5
          in al,dx                        ;低8位 
          mov bx,ax                       ;BX=代表光标位置的16位数
 
@@ -182,52 +182,6 @@ allocate_memory:
 	pop	es
 
 	retf
-;;; --------------------------------------------------------------------------
-	;; 在GDT内安装一个新的描述符
-	;; 输入:EDX:EAX=描述符
-	;; 输出:CX=描述符的选择子
-set_up_gdt_descriptor:
-	push	eax
-	push	ebx
-	push 	edx
-
-	push	ds
-	push	es
-
-	mov	ebx,core_data_seg_sel ;切换到核心数据段
-	mov	ds,ebx
-
-	sgdt	[psdt]		;以便开始处理GDT
-
-	mov	ebx,mem_0_4_gb_seg_sel
-	mov	es,ebx
-
-	movzx	ebx,word[pgdt]	;GDT界限
-	inc	bx		;GDT总字节数，也是下一个描述符偏移
-	add	ebx,[pgdt+2]	;下一个描述符的线性地址
-
-	mov	[es:ebx],eax
-	mov	[es:ebx+4],edx
-
-	add	word[pgdt],8	;增加一个描述符的大小
-
-	lgdt	[pgdt]		;对GDT的更改生效
-
-	mov	ax,[pgdt]	;得到GDT界限值
-	xor	dx,dx
-	mov	bx,8
-	div	bx		;除以8,去掉余数
-	mov	cx,ax
-	shl	cx,3		;将索引号移到正确位置
-
-	pop	es
-	pop	ds
-
-	pop	edx
-	pop	ebx
-	pop	eax
-
-	retf
 ;;; --------------------------------------------------------------
 	;; 在GDT内安装一个新的描述符
 	;; 输入:EDA:EAX=描述符
@@ -290,6 +244,12 @@ make_seg_descriptor:
 	or	edx,ebx		;装配段界限的高4位
 
 	or	edx,ecx		;装配属性
+
+	retf
+
+;;; -------------------------------------------------------------
+	;; 从磁盘读一个扇区，暂时不用
+read_hard_disk_0:
 
 	retf
 ;;; --------------------------------------------------------------
@@ -472,7 +432,7 @@ load_relocate_program:
 .b4:
 	pop	ecx
 	pop	esi
-	add	esi.salt_item_len
+	add	esi,salt_item_len
 	pop	edi		;从头比较
 	loop	.b3
 
@@ -523,11 +483,11 @@ start:
 	mov	[cpu_brand+0x28],ecx
 	mov	[cpu_brand+0x2c],edx
 
-	mov	ebx,cpu_brand0
+	mov	ebx,cpu_brnd0
 	call	sys_routine_seg_sel:put_string
 	mov	ebx,cpu_brand
 	call	sys_routine_seg_sel:put_string
-	mov	ebx,cpu_brand1
+	mov	ebx,cpu_brnd1
 	call	sys_routine_seg_sel:put_string
 
 	mov	ebx,message_5
@@ -538,7 +498,7 @@ start:
 	mov	ebx,do_status
 	call	sys_routine_seg_sel:put_string
 
-	mov	[esb_pointer],esp ;临时保存堆栈指针
+	mov	[esp_pointer],esp ;临时保存堆栈指针
 
 	mov	ds,ax
 
