@@ -229,3 +229,70 @@ set_up_gdt_descriptor:
 
 	retf
 ;;; --------------------------------------------------------------
+	;; 在GDT内安装一个新的描述符
+	;; 输入:EDA:EAX=描述符
+	;; 输出:CX=描述符的选择子
+set_up_gdt_descriptor:
+	push	eax
+	push	ebx
+	push	edx
+
+	push	ds
+	push	es
+
+	mov	ebx,core_data_seg_sel ;切换到核心数据段
+	mov	ds,ebx
+
+	sgdt	[pgdt]		;以便开始处理GDT
+
+	mov	ebx,mem_0_4_gb_seg_sel
+	mov	es,ebx
+
+	movzx	ebx,word[pgdt]	;GDT界限
+	inc	bx		;GDT总字节数，也是下一个描述符偏移
+	add	ebx,[pgdt+2]
+
+	add	word[pgdt],8	;增加一个描述符大小
+
+	lgdt	[pgdt]		;对GDT的更改生效
+
+	mov	ax,[pgdt]	;得到GDT界限值
+	xor	dx,dx
+	mov	bx,8
+	div	bx		;除以8,去掉余数
+	mov	cx,ax
+	shl	cx,3		;将索引号移到正确位置
+
+	pop	es
+	pop	ds
+
+	pop	edx
+	pop	ebx
+	pop	eax
+
+	retf
+;;; -------------------------------------------------------------
+	;; 构造存储器和系统的段描述符
+	;; 输入:EAX=线性基地址
+	;;     	EBX=段界限
+	;; 	ECX=属性。各属性位都在原始位置，无关的位清零
+	;; 返回:EDX:EAX=描述符
+make_seg_descriptor:
+	mov	edx,eax
+	shl	eax,16
+	or	ax,bx		;描述符前32位（EAX）构造完毕
+
+	and	edx,0xffff0000	;清除基地址中无关的位
+	rol	edx,8
+	bswap	edx		;装配基址的31~24和23~16 （80486+）
+
+	xor	bx,bx
+	or	edx,ebx		;装配段界限的高4位
+
+	or	edx,ecx		;装配属性
+
+	retf
+;;; --------------------------------------------------------------
+SECTION core_data vstart=0 ;系统核心的数据段
+;;; -------------------------------------------------------------
+	
