@@ -46,10 +46,10 @@ retry:
 	jmp	retry
 next:
 	inc	di
-	pop	cx
-	cmp	di,cx
+	pop	ax
+	cmp	di,ax
+	push	ax
 	je	rexit
-	push	cx
 	add	bx,0x0200
 	add	cl,1
 	cmp	cl,18

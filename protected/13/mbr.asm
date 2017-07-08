@@ -25,7 +25,7 @@
 	;; 以下判断整个程序多大
 	pop	ds
 	mov	dx,[2]	;核心程序尺寸
-	xor	ax,[0]
+	mov	ax,[0]
 	mov	bx,0x200		;512字节每扇区
 	div	bx
 
