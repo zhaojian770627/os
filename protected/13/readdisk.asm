@@ -46,11 +46,11 @@ retry:
 	jmp	retry
 next:
 	inc	di
+	add 	bx,0x0200
 	pop	ax
 	cmp	di,ax
-	push	ax
 	je	rexit
-	add	bx,0x0200
+	push	ax
 	add	cl,1
 	cmp	cl,18
 	jbe	readloop
