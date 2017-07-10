@@ -21,7 +21,8 @@
 	div	bx
 	mov	es,ax
 	push	es
-
+	push	es
+	
 	;; 以下加载系统核心程序
 	mov	eax,core_start_sector
 	mov	ebx,0		;起始部分
@@ -58,7 +59,7 @@
 	div	bx
 	mov	es,ax
 	push	es
-
+		
 	;; 以下加载系统核心程序
 	mov	eax,user_start_sector
 	mov	ebx,0		;起始部分
@@ -88,15 +89,21 @@
 
 	call	read_floppy_disk
 @4:
-	;; 以下进入保护模式......
+	;;转移到核心段
+	pop	ds
+	mov	dx,[0x14]
+	mov	ax,[0x12]
+	call	calc_segment_base
+	mov	[0x12],ax
+	
 	hlt
 ;;; ------------------------------------------------------------------
 calc_segment_base:		;计算16位段地址
 	;; 输入:DX:AX=32位物理地址
 	;; 返回:AX=16位段基地址
 	push	dx
-	add	ax,[cs:phy_base]
-	add	dx,[cs:phy_base+0x02]
+	add	ax,[cs:phy_base+0x7c00]
+	add	dx,[cs:phy_base+0x02+0x7c00]
 	shr	ax,4
 	ror	dx,4
 	and 	dx,0xf000
