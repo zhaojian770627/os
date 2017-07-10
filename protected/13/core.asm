@@ -10,11 +10,11 @@
 	sys_routine_seg	dd	section.sys_routine.start ;系统公用例程位置04
 	core_data_seg	dd	section.core_data.start	  ;核心公用例程段位置08
 	core_code_seg	dd	section.core_code.start	  ;核心代码段位置0c
-	core_entry	dw	start			  ;核心代码段入口点 10
+	core_entry	dw	init			  ;核心代码段入口点 10
 			dd	section.sys_init_code.start ;段地址 12
 ;;; ==========================================================================
 	;; 初始化段
-SECTION sys_init_code vstart=0
+SECTION sys_init_code align=16  vstart=0
 init:
 	hlt
 
