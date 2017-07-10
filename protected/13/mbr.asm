@@ -91,6 +91,19 @@
 	;; 以下进入保护模式......
 	hlt
 ;;; ------------------------------------------------------------------
+calc_segment_base:		;计算16位段地址
+	;; 输入:DX:AX=32位物理地址
+	;; 返回:AX=16位段基地址
+	push	dx
+	add	ax,[cs:phy_base]
+	add	dx,[cs:phy_base+0x02]
+	shr	ax,4
+	ror	dx,4
+	and 	dx,0xf000
+	or	ax,dx
+	pop	dx
+	ret
+;;; ------------------------------------------------------------------
 %include "readdisk.asm"
 dispstr:
 	mov	bp,ax		;ES:BP= string address
