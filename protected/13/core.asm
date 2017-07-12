@@ -1,3 +1,6 @@
+	core_base_address equ 0x00040000 ;常数,内核加载的起始内存地址
+	user_base_address equ 0x00050000 ;常数，用户程序加载的起始内存地址
+	
 	core_code_seg_sel	equ	0x38 ;内核代码段选择子
 	core_data_seg_sel	equ	0x30 ;内核数据段选择子
 	sys_routine_seg_sel	equ	0x28 ;系统公共例程代码段选择子
@@ -16,11 +19,18 @@
 	;; 初始化段
 SECTION sys_init_code align=16  vstart=0
 init:
+	mov	ax,cs
+	mov	ss,ax
+	mov 	sp,stackend
+	
+	mov	eax,[cs:bgdt+0x02]
+		
 	hlt
 
-;;	pgdt	dw	0
-;;		dd	0x00007e00 ;GDT的物理地址
-	
+	bgdt	dw	0
+		dd	0x00007e00 ;GDT的物理地址
+	stack times 256 db 0
+stackend:	
 	[bits 32]
 ;;; -----------------------------------------------------------------
 SECtiON sys_routine vstart=0	;系统公共例程代码段
