@@ -23,13 +23,19 @@ init:
 	mov	ss,ax
 	mov 	sp,stackend
 	
-	mov	eax,[cs:bgdt+0x02]
-		
+	mov	eax,[cs:bgdt+0x02] ;GDT的32为物理地址
+	xor	edx,edx
+	mov	ebx,16
+	div	ebx		;分解为16位物理地址
+
+	mov	ds,eax		;令DS指向该段以进行操作
+	mov	ebx,edx		;段内偏移地址
+	
 	hlt
 
 	bgdt	dw	0
 		dd	0x00007e00 ;GDT的物理地址
-	stack times 256 db 0
+	stack 	times 256 db 0
 stackend:	
 	[bits 32]
 ;;; -----------------------------------------------------------------
