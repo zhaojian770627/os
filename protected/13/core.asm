@@ -30,7 +30,43 @@ init:
 
 	mov	ds,eax		;令DS指向该段以进行操作
 	mov	ebx,edx		;段内偏移地址
+
+	;; 跳过0#描述符的槽位
+	;; 创建1#描述符，这是一个数据段，对应0-4GB的线性地址空间
+	mov	dword[ebx+0x08],0x0000ffff ;基地址位0，段界限0xfffff
+	mov	dword[ebx+0x0c],0x00cf9200 ;粒度为1个字节，代码段描述符
+
+	;; 创建保护模式下初始化代码段描述符
+	mov	dword[ebx+0x10],0x00001fff ;基地址为0x0004000,界限1fff
+	mov	dword[ebx+0x1c],0x00cf9604 ;粒度为1个字节，代码段描述符
+
+	;; 堆栈段描述符
+	mov	dword[ebx+0x18],0x7c00fffe ;基地址为0x00007c00，界限为0xffffe
+	mov	dword[ebx+0x1c],0x00cf9600 ;粒度4KB
+
+	;; 建立保护模式下的显示缓冲区描述符
+	mov	dword[ebx+0x18],0x80007fff ;基地址为0x0000B800，界限为0x07fff
+	mov	dword[ebx+0x1c],0x0040920b ;粒度为字节
+
+	mov	word[cs:bgdt],39
 	
+	lgdt 	[cs:bgdt]	
+
+	in	al,0x92
+	or	al,0000_0010B
+	out	0x92,al
+
+	cli
+
+	mov	eax,cr0
+	or 	eax,1
+	mov	cr0,eax
+
+
+	jmp	dword 0x0010:flush
+
+	[bits 32]
+flush:
 	hlt
 
 	bgdt	dw	0
