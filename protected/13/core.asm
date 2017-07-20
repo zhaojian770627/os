@@ -40,6 +40,15 @@ init:
 	mov	dword[ebx+0x10],0x00001fff ;基地址为0x0004000,界限1fff
 	mov	dword[ebx+0x1c],0x00cf9604 ;粒度为1个字节，代码段描述符
 
+	;; 先初始化一个描述符
+	mov	ax,cs
+	movzx	eax,ax
+	shl	eax,4
+	mov	word[ebx+0x10+2],ax
+	shr	eax,16
+	mov	byte[ebx+0x10+4],al
+	mov	byte[ebx+0x10+7],ah
+	
 	;; 堆栈段描述符
 	mov	dword[ebx+0x18],0x7c00fffe ;基地址为0x00007c00，界限为0xffffe
 	mov	dword[ebx+0x1c],0x00cf9600 ;粒度4KB
@@ -68,7 +77,8 @@ init:
 	[bits 32]
 flush:
 	hlt
-
+	jmp flush
+	
 	bgdt	dw	0
 		dd	0x00007e00 ;GDT的物理地址
 	stack 	times 256 db 0
