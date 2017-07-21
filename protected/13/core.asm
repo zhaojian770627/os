@@ -34,7 +34,7 @@ init:
 	;; 跳过0#描述符的槽位
 	;; 创建1#描述符，这是一个数据段，对应0-4GB的线性地址空间
 	mov	dword[ebx+0x08],0x0000ffff ;基地址位0，段界限0xfffff
-	mov	dword[ebx+0x0c],0x00cf9200 ;粒度为1个字节，代码段描述符
+	mov	dword[ebx+0x0c],0x00cf9200 ;粒度为1个字节，数据段描述符
 
 	;; 创建保护模式下初始化代码段描述符
 	mov	dword[ebx+0x10],0x00001fff ;基地址为0x0004000,界限1fff
