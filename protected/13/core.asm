@@ -38,7 +38,7 @@ init:
 
 	;; 创建保护模式下初始化代码段描述符
 	mov	dword[ebx+0x10],0x00001fff ;基地址为0x0004000,界限1fff
-	mov	dword[ebx+0x1c],0x00cf9604 ;粒度为1个字节，代码段描述符
+	mov	dword[ebx+0x14],0x00409800 ;粒度为1个字节，代码段描述符
 
 	;; 先初始化一个描述符
 	mov	ax,cs
