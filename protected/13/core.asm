@@ -72,12 +72,17 @@ init:
 	mov	cr0,eax
 
 
-	jmp	dword 0x0010:flush
+	jmp	dword 0x0010:setup
 
 	[bits 32]
-flush:
+setup:
+	mov	eax,0x0008
+	mov	ds,eax
+
+	mov	eax,[0x40012]
+	
 	hlt
-	jmp flush
+	jmp 	setup
 	
 	bgdt	dw	0
 		dd	0x00007e00 ;GDT的物理地址
