@@ -54,8 +54,8 @@ init:
 	mov	dword[ebx+0x1c],0x00cf9600 ;粒度4KB
 
 	;; 建立保护模式下的显示缓冲区描述符
-	mov	dword[ebx+0x18],0x80007fff ;基地址为0x0000B800，界限为0x07fff
-	mov	dword[ebx+0x1c],0x0040920b ;粒度为字节
+	mov	dword[ebx+0x20],0x80007fff ;基地址为0x0000B800，界限为0x07fff
+	mov	dword[ebx+0x24],0x0040920b ;粒度为字节
 
 	mov	word[cs:bgdt],39
 	
@@ -76,13 +76,35 @@ init:
 
 	[bits 32]
 setup:
+	;; 数据段（0..4GB）选择子
 	mov	eax,0x0008
 	mov	ds,eax
 
+	;; 堆栈段选择子
+	mov	eax,0x0018
+	mov	ss,eax
+	xor	esp,esp
+
 	mov	eax,[0x40012]
+	shl	eax,4
+
+	mov	esi,[eax+bgdt+0x02]
+	mov	edi,core_base_address
+
+	;; 建立公用历程段描述符
+	mov	eax,[edi+0x04]	;公用例程代码段起始汇编地址
+	mov	ebx,[edi+0x08]	;核心数据段汇编地址
+	sub	ebx,eax
+	dec	ebx		;公用例程段界限
+	add	eax,edi		;公用例程段基地址
+	mov	ecx,0x00409800	;字节粒度的代码段描述符
+	call	make_seg_descriptor
+	mov	[esi+0x28],eax
+	mov	[esi,0x2c],edx
 	
+.hlt:
 	hlt
-	jmp 	setup
+	jmp 	.hlt
 	
 	bgdt	dw	0
 		dd	0x00007e00 ;GDT的物理地址
