@@ -13,8 +13,10 @@
 	sys_routine_seg	dd	section.sys_routine.start ;系统公用例程位置04
 	core_data_seg	dd	section.core_data.start	  ;核心公用例程段位置08
 	core_code_seg	dd	section.core_code.start	  ;核心代码段位置0c
-	core_entry	dw	init			  ;核心代码段入口点 10
+	core_entry	dw	init			  ;初始代码段入口点 10
 			dd	section.sys_init_code.start ;段地址 12
+	core_protected	dd	start			    ;核心代码段入口点 16
+			dw	core_code_seg_sel   ;核心代码段	   1a
 ;;; ==========================================================================
 	;; 初始化段
 SECTION sys_init_code align=16  vstart=0
@@ -88,28 +90,82 @@ setup:
 	mov	eax,[0x40012]
 	shl	eax,4
 
+	push	eax
+	
 	mov	esi,[eax+bgdt+0x02]
 	mov	edi,core_base_address
 
-	;; 建立公用历程段描述符
+	;; 建立公用例程段描述符
 	mov	eax,[edi+0x04]	;公用例程代码段起始汇编地址
 	mov	ebx,[edi+0x08]	;核心数据段汇编地址
 	sub	ebx,eax
 	dec	ebx		;公用例程段界限
 	add	eax,edi		;公用例程段基地址
 	mov	ecx,0x00409800	;字节粒度的代码段描述符
-	call	make_seg_descriptor
+	call	make_gdt_descriptor
 	mov	[esi+0x28],eax
-	mov	[esi,0x2c],edx
+	mov	[esi+0x2c],edx
+
+	;; 建立核心数据段描述符
+	mov	eax,[edi+0x08]	;核心数据段起始汇编地址
+	mov	ebx,[edi+0x0c]	;核心代码段汇编地址
+	sub	ebx,eax
+	dec	ebx		;核心数据段界限
+	add	eax,edi		;核心数据段基地址
+	mov	ecx,0x00409200	;字节粒度的数据段描述符
+	call	make_gdt_descriptor
+	mov	[esi+0x30],eax
+	mov	[esi+0x34],edx
+
+	;; 建立核心代码段描述符
+	mov	eax,[edi+0x0c]	;核心代码段起始汇编地址
+	mov	ebx,[edi+0x00]	;程序总长度
+	sub	ebx,eax
+	dec	ebx		;核心代码段界限
+	add	eax,edi		;核心代码段基地址
+	mov	ecx,0x00409800	;字节粒度的代码段描述符
+	call	make_gdt_descriptor
+	mov	[esi+0x38],eax
+	mov	[esi+0x3c],edx
+
+	pop 	eax
+	mov	word[eax+bgdt],63 ;描述符表的界限
+
+	lgdt	[eax+bgdt]
 	
+	jmp	far[edi+0x16]
 .hlt:
 	hlt
 	jmp 	.hlt
 	
 	bgdt	dw	0
 		dd	0x00007e00 ;GDT的物理地址
+
+;-------------------------------------------------------------------------------
+make_gdt_descriptor:                     ;构造描述符
+                                         ;输入：EAX=线性基地址
+                                         ;      EBX=段界限
+                                         ;      ECX=属性（各属性位都在原始
+                                         ;      位置，其它没用到的位置0） 
+                                         ;返回：EDX:EAX=完整的描述符
+         mov edx,eax
+         shl eax,16                     
+         or ax,bx                        ;描述符前32位(EAX)构造完毕
+      
+         and edx,0xffff0000              ;清除基地址中无关的位
+         rol edx,8
+         bswap edx                       ;装配基址的31~24和23~16  (80486+)
+      
+         xor bx,bx
+         or edx,ebx                      ;装配段界限的高4位
+      
+         or edx,ecx                      ;装配属性 
+      
+         ret
+;;; -----------------------------------------------------------------
 	stack 	times 256 db 0
-stackend:	
+stackend:
+	
 	[bits 32]
 ;;; -----------------------------------------------------------------
 SECtiON sys_routine vstart=0	;系统公共例程代码段
