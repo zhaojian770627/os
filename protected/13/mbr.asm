@@ -4,7 +4,7 @@
 	core_start_sector equ 0x00000002 ;常数,内核的起始逻辑扇区号
 
 	user_base_address equ 0x00050000 ;常数，用户程序加载的起始内存地址
-	user_start_sector equ 0x0000000b ;常数，用户程序起始逻辑扇区号 11扇区
+	user_start_sector equ 0x0000000c ;常数，用户程序起始逻辑扇区号 11扇区
 
 	mov	ax,cs
 	mov	ss,ax
