@@ -1,5 +1,5 @@
 #
-EXEF:=hello moveadd
+EXEF:=hello moveadd ipmode
 all:$(EXEF)
 moveadd:moveadd.o -lncurses
 hello:hello.o -lncurses

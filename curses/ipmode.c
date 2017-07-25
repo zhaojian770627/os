@@ -50,7 +50,7 @@ int main(){
   else
     printw("%s","Wrong");
   refresh();
-
+  sleep(5);
   endwin();
   exit(EXIT_SUCCESS);
 }
