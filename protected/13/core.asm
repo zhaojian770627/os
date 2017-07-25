@@ -134,9 +134,6 @@ setup:
 	lgdt	[eax+bgdt]
 	
 	jmp	far[edi+0x16]
-.hlt:
-	hlt
-	jmp 	.hlt
 	
 	bgdt	dw	0
 		dd	0x00007e00 ;GDT的物理地址
@@ -230,7 +227,7 @@ put_char:                                ;显示一个字符
 
          ;以下将光标位置推进一个字符
          shr bx,1
-         add bx,1
+         inc bx
 
  .roll_screen:
          cmp bx,2000                     ;光标超出屏幕？滚屏
@@ -613,6 +610,10 @@ start:
 
 	mov	ebx,message_1
 	call	sys_routine_seg_sel:put_string
+
+.hlt:
+	hlt
+	jmp 	.hlt
 
 	;; 显示处理器品牌信息
 	mov	eax,0x80000002
