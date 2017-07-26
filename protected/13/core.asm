@@ -607,7 +607,8 @@ load_relocate_program:
 start:
 	mov	ecx,core_data_seg_sel ;使ds指向核心数据段
 	mov	ds,ecx
-
+	mov	es,ecx
+	
 	mov	ebx,message_1
 	call	sys_routine_seg_sel:put_string
 
