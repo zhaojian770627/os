@@ -612,10 +612,6 @@ start:
 	mov	ebx,message_1
 	call	sys_routine_seg_sel:put_string
 
-.hlt:
-	hlt
-	jmp 	.hlt
-
 	;; 显示处理器品牌信息
 	mov	eax,0x80000002
 	cpuid
@@ -644,6 +640,11 @@ start:
 	call	sys_routine_seg_sel:put_string
 	mov	ebx,cpu_brnd1
 	call	sys_routine_seg_sel:put_string
+
+.hlt:
+	hlt
+	jmp 	.hlt
+
 
 	mov	ebx,message_5
 	call	sys_routine_seg_sel:put_string
