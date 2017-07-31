@@ -473,41 +473,13 @@ load_relocate_program:
 	push	ds
 	push	es
 
-	mov	eax,core_data_seg_sel
-	mov	ds,eax		;切换DS到内核数据段
 
-	mov	eax,esi		;读取程序头部数据
-	mov	ebx,core_buf
-	;; ?????????????????????????????
-	call	sys_routine_seg_sel:read_hard_disk_0
-
-	;;以下判断整个程序大小
-	mov	eax,[core_buf]	;程序尺寸
-	mov	ebx,eax
-	and 	ebx,0xfffffe00	;512字节对齐(能被512整除的数，低9位都为0)
-	add	ebx,512
-	test	eax,0x000001ff	;程序的大小正好是512的倍数吗？
-	cmovnz	eax,ebx		;不是。使用紧凑的结果
-
-	mov	ecx,eax		;实际申请需要的内存数量
-	call 	sys_routine_seg_sel:allocate_memory
-	mov	ebx,ecx		;ebx->申请到的内存首地址
-	push	ebx		;保存该首地址
-	xor	edx,edx
-	mov	ecx,512
-	div	ecx
-	mov	ecx,eax		;总扇区数
-
-	mov	eax,mem_0_4_gb_seg_sel ;切换DS到0-4G的段
+	mov	eax,mem_0_4_gb_seg_sel ;切换到DS到0-4GB的段
 	mov	ds,eax
-	mov	eax,esi		;起始扇区号
-.b1:
-	call	sys_routine_seg_sel:read_hard_disk_0
-	inc	eax
-	loop	.b1		;循环读，直到读完整个用户程序
-
+	
 	;; 建立程序头部段描述符
-	pop	edi		;恢复程序装载的首地址
+	mov	edi,user_base_address		;恢复程序装载的首地址
+
 	mov	eax,edi		;程序头不起始线性地址
 	mov	ebx,[edi+0x04]	;段长度
 	dec	ebx		;段界限
@@ -641,16 +613,15 @@ start:
 	mov	ebx,cpu_brnd1
 	call	sys_routine_seg_sel:put_string
 
+	mov	ebx,message_5
+	call	sys_routine_seg_sel:put_string
+
+	call	load_relocate_program
+
 .hlt:
 	hlt
 	jmp 	.hlt
-
-
-	mov	ebx,message_5
-	call	sys_routine_seg_sel:put_string
-	mov	esi,50		;用户程序位于逻辑50扇区
-	call	load_relocate_program
-
+	
 	mov	ebx,do_status
 	call	sys_routine_seg_sel:put_string
 
