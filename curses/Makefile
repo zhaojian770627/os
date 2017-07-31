@@ -1,6 +1,7 @@
 #
-EXEF:=hello moveadd ipmode
+EXEF:=hello moveadd ipmode multiw1
 all:$(EXEF)
+multiw1:multiw1.o -lncurses
 moveadd:moveadd.o -lncurses
 hello:hello.o -lncurses
 ipmode:ipmode.o -lncurses
