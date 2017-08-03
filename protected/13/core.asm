@@ -329,7 +329,7 @@ allocate_memory:
 
 	pop	ebx
 	pop	eax
-	pop	es
+	pop	ds
 
 	retf
 ;;; --------------------------------------------------------------
@@ -356,6 +356,9 @@ set_up_gdt_descriptor:
 	inc	bx		;GDT总字节数，也是下一个描述符偏移
 	add	ebx,[pgdt+2]
 
+	mov	[es:ebx],eax
+	mov	[es:ebx+4],edx
+	
 	add	word[pgdt],8	;增加一个描述符大小
 
 	lgdt	[pgdt]		;对GDT的更改生效
@@ -510,7 +513,7 @@ load_relocate_program:
 
 	;; 建立程序堆栈段描述符
 	mov	ecx,[edi+0x0c]	;4KB的倍率
-	add	ebx,0x000f0000
+	add	ebx,0x000fffff
 	sub	ebx,ecx		;得到段界限
 	mov	ebx,4096
 	mul	dword[edi+0x0c]
