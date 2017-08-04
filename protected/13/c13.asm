@@ -47,10 +47,6 @@ start:
 	mov	ebx,message_1
 	call	far [fs:PrintString]
 
-	mov	eax,100		;逻辑扇区号
-	mov	ebx,buffer	;缓冲区偏移地址
-	call	far [fs:ReadDiskData] ;段间调用
-
 	mov	ebx,message_2
 	call	far [fs:PrintString] ;too.
 

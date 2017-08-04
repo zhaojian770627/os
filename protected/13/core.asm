@@ -29,7 +29,7 @@ init:
 	xor	edx,edx
 	mov	ebx,16
 	div	ebx		;分解为16位物理地址
-
+	
 	mov	ds,eax		;令DS指向该段以进行操作
 	mov	ebx,edx		;段内偏移地址
 
@@ -483,7 +483,7 @@ load_relocate_program:
 	;; 建立程序头部段描述符
 	mov	edi,user_base_address		;恢复程序装载的首地址
 
-	mov	eax,edi		;程序头不起始线性地址
+	mov	eax,edi		;程序头部起始线性地址
 	mov	ebx,[edi+0x04]	;段长度
 	dec	ebx		;段界限
 	mov	ecx,0x00409200	;字节粒度的数据段描述符
@@ -621,9 +621,6 @@ start:
 
 	call	load_relocate_program
 
-.hlt:
-	hlt
-	jmp 	.hlt
 	
 	mov	ebx,do_status
 	call	sys_routine_seg_sel:put_string
