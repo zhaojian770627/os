@@ -493,7 +493,7 @@ load_relocate_program:
 
 	;; 建立程序代码段描述符
 	mov	eax,edi
-	add	ebx,[edi+0x14]	;代码起始线性地址
+	add	eax,[edi+0x14]	;代码起始线性地址
 	mov	ebx,[edi+0x18]	;段长度
 	dec	ebx		;段界限
 	mov	ecx,0x00409800	;字节粒度的数据段描述符
@@ -503,7 +503,7 @@ load_relocate_program:
 
 	;; 建立程序数据段描述符
 	mov	eax,edi
-	add	ebx,[edi+0x1c]	;数据段起始线性地址
+	add	eax,[edi+0x1c]	;数据段起始线性地址
 	mov	ebx,[edi+0x20]	;段长度
 	dec	ebx		;段界限
 	mov	ecx,0x00409200	;字节粒度的数据段描述符
@@ -513,7 +513,7 @@ load_relocate_program:
 
 	;; 建立程序堆栈段描述符
 	mov	ecx,[edi+0x0c]	;4KB的倍率
-	add	ebx,0x000fffff
+	mov	ebx,0x000fffff
 	sub	ebx,ecx		;得到段界限
 	mov	ebx,4096
 	mul	dword[edi+0x0c]
