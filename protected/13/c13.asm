@@ -25,8 +25,7 @@ header_end:
 ;;; -----------------------------------------------------------------
 SECTION data vstart=0
 	buffer	times 1024 db	0 ;缓冲区
-	message_1	db	0x0d,0x0a,0x0d,0x0a
-			db	'**********User program is runing*********'
+	message_1	db	'**********User program is runing*********'
 			db	0x0d,0x0a,0
 	message_2	db	'   Disk data:',0x0d,0x0a,0
 data_end:
