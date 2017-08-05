@@ -433,7 +433,7 @@ salt:
 	salt_4	db '@TerminateProgram'
 		times 256-($-salt_4) db 0
 		dd return_point
-		dw sys_routine_seg_sel
+		dw core_code_seg_sel
 
 	salt_item_len 	equ $-salt_4
 	salt_items	equ ($-salt)/salt_item_len
@@ -515,7 +515,7 @@ load_relocate_program:
 	mov	ecx,[edi+0x0c]	;4KB的倍率
 	mov	ebx,0x000fffff
 	sub	ebx,ecx		;得到段界限
-	mov	ebx,4096
+	mov	eax,4096
 	mul	dword[edi+0x0c]
 	mov	ecx,eax		;准备为堆栈分配内存
 	call	sys_routine_seg_sel:allocate_memory
