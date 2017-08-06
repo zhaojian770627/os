@@ -54,6 +54,25 @@ int main()
   wrefresh(popup_window_ptr);
   sleep(2);
 
+  touchwin(new_window_ptr);
+  wrefresh(new_window_ptr);
+  sleep(2);
+
+  wclear(new_window_ptr);
+  wrefresh(new_window_ptr);
+  sleep(2);
+
+  delwin(new_window_ptr);
+
+  touchwin(popup_window_ptr);
+  wrefresh(popup_window_ptr);
+  sleep(2);
+
+  delwin(popup_window_ptr);
+
+  touchwin(stdscr);
+  refresh();
+  sleep(2);
 
   endwin();
   exit(EXIT_SUCCESS);
