@@ -1,6 +1,7 @@
 #
-EXEF:=hello moveadd ipmode multiw1 subscl
+EXEF:=hello moveadd ipmode multiw1 subscl keypad
 all:$(EXEF)
+keypad:keypad.o -lncurses
 subscl:subscl.o -lncurses
 multiw1:multiw1.o -lncurses
 moveadd:moveadd.o -lncurses
