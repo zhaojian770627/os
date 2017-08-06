@@ -16,7 +16,7 @@
 	core_entry	dw	init			  ;初始代码段入口点 10
 			dd	section.sys_init_code.start ;段地址 12
 	core_protected	dd	start			    ;核心代码段入口点 16
-			dw	core_code_seg_sel   ;核心代码段	   1a
+			dd	core_code_seg_sel   ;核心代码段	   1a
 ;;; ==========================================================================
 	;; 初始化段
 SECTION sys_init_code align=16  vstart=0
