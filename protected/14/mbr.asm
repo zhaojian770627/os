@@ -60,6 +60,15 @@ stop:
       
          ;以下进入保护模式... ...
          jmp dword 0x0010:flush             ;16位的描述符选择子：32位偏移
+dispstr:
+	mov	bp,ax		;ES:BP= string address
+	mov	cx,16		;CX= string length
+	mov	ax,01301h	;AH=13,AL=01h
+	mov	bx,000ch	;Page 0(BH=0) background black font red
+	mov	dl,0
+	int 	10h
+	ret
+	;; -----------------------------------------------------
                                             ;清流水线并串行化处理器
          [bits 32]               
   flush:                                  
@@ -219,15 +228,6 @@ make_gdt_descriptor:                     ;构造描述符
          or edx,ecx                      ;装配属性 
       
          ret
-dispstr:
-	mov	bp,ax		;ES:BP= string address
-	mov	cx,16		;CX= string length
-	mov	ax,01301h	;AH=13,AL=01h
-	mov	bx,000ch	;Page 0(BH=0) background black font red
-	mov	dl,0
-	int 	10h
-	ret
-      
 ;-------------------------------------------------------------------------------
          pgdt             dw 0
                           dd 0x00007e00      ;GDT的物理地址

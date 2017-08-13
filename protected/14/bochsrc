@@ -8,7 +8,7 @@ vgaromimage:file=/usr/local/share/bochs/VGABIOS-lgpl-latest
 boot:disk
 
 ata0:enabled=1,ioaddr1=0x1f0,ioaddr2=0x3f0,irq=14
-ata0-master:type=disk,path=disk.vhd,mode=flat,cylinders=1003,heads=12,spt=17,model="Generic 1234",biosdetect=auto,translation=auto
+ata0-master:type=disk,path=/home/zj/imgs/disk.vhd,mode=flat,cylinders=1003,heads=12,spt=17,model="Generic 1234",biosdetect=auto,translation=auto
 
 
 log:bochsout.txt
