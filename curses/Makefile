@@ -1,6 +1,7 @@
 #
-EXEF:=hello moveadd ipmode multiw1 subscl keypad color
+EXEF:=hello moveadd ipmode multiw1 subscl keypad color pad
 all:$(EXEF)
+pad:pad.o -lncurses
 color:color.o -lncurses
 keypad:keypad.o -lncurses
 subscl:subscl.o -lncurses
