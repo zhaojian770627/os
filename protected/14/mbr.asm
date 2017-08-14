@@ -13,9 +13,6 @@
 
 	mov     ax,0x7c00+init_msg
 	call    dispstr
-stop:
-	hlt
-	jmp stop
 	
 	;计算GDT所在的逻辑段地址
          mov eax,[cs:pgdt+0x7c00+0x02]      ;GDT的32位物理地址 

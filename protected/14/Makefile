@@ -5,8 +5,8 @@ all:disk
 disk:mbr.bin core.bin c14.bin
 	cp ~/imgs/org.vhd disk.vhd
 	dd if=mbr.bin of=disk.vhd  bs=512 count=1 conv=notrunc
-	dd if=core.bin of=disk.vhd  bs=512 seek=49 conv=notrunc
-#	dd if=c14.bin of=protected.img  bs=512 seek=11 conv=notrunc
+	dd if=core.bin of=disk.vhd  bs=512 seek=1 conv=notrunc
+	dd if=c14.bin of=disk.vhd  bs=512 seek=49 conv=notrunc
 	cp disk.vhd ~/imgs
 mbr.bin:
 	nasm -f bin mbr.asm -o mbr.bin -l mbr.lst
