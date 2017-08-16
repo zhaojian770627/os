@@ -384,6 +384,48 @@ SECTION core_data vstart=0                  ;系统核心的数据段
 ;===============================================================================
 SECTION core_code vstart=0
 ;-------------------------------------------------------------------------------
+	;; 在LDT内安装一个新的描述符
+	;; 输入:EDX:EAX=描述符
+	;;         EBX=TCB基地址
+	;; 输出:cx=描述符的选择子
+fill_descriptor_in_ldt:
+	push 	eax
+	push	edx
+	push	edi
+	push	ds
+
+	mov	ecx,mem_0_4_gb_seg_sel
+	mov	ds,ecx
+
+	mov	edi,[ebx+0x0c]	;获得LDT基地址
+
+	xor	ecx,ecx
+	mov	cx,[ebx+0x0a]	;获得LDT界限
+	inc	cx		;LDT的总字节数，即新描述符偏移地址
+	mov	[edi+ecx+0x00],eax ;安装描述符
+	mov	[edi+ecx+0x04],edx
+
+	add	cx,8
+	dec	cx		;得到新的LDT界限值
+
+	mov	[ebx+0x0a],cx	;更新LDT界限值到TCB
+
+	mov	ax,cx
+	xor	dx,dx
+	mov	cx,8
+	div	cx
+
+	mov	cx,ax
+	shl	cx,3		;左移三位，并且
+	or	cx,0000_0000_0000_0100B ;使TI位=1，指向LDT，最后使RPL=00
+
+	pop	ds
+	pop	edi
+	pop	edx
+	pop	eax
+
+	ret
+
 load_relocate_program:                      ;加载并重定位用户程序
                                             ;输入：ESI=起始逻辑扇区号
                                             ;返回：AX=指向用户程序头部的选择子 
@@ -564,21 +606,32 @@ start:
          mov ebx,cpu_brnd1
          call sys_routine_seg_sel:put_string
 
-         mov ebx,message_5
-         call sys_routine_seg_sel:put_string
-         mov esi,50                          ;用户程序位于逻辑50扇区 
-         call load_relocate_program
-      
-         mov ebx,do_status
-         call sys_routine_seg_sel:put_string
-      
-         mov [esp_pointer],esp               ;临时保存堆栈指针
-       
-         mov ds,ax
-      
-         jmp far [0x10]                      ;控制权交给用户程序（入口点）
-                                             ;堆栈可能切换 
+	;; 以下开始安装为整个系统服务的调用门。特权级之间的控制转移必须使用门
+	mov	edi,salt	;C-SALT表的起始地址
+	mov	ecx,salt_items	;C-SALT表的条目数量
+.b3:
+	push	ecx
+	mov	eax,[edi+256]	;该条目入口点的32位偏移地址
+	mov	bx,[edi+260]	;该条目入口点的段选择子
+	;; 特权级3的调用门（3以上的特权级才允许访问)
+	;; 0个参数（因为用寄存器传递参数，而没有用到栈）
+	mov	cx,1_11_0_1100_000_00000B
+	call	sys_routine_seg_sel:make_gate_descriptor
+	call	sys_routine_seg_sel:set_up_gdt_descriptor
+	mov	[edi+260],cx	;将返回的门描述符选择子回填
+	add	edi,salt_item_len ;指向下一个C-SALT条目
+	pop	ecx
+	loop	.b3
 
+	;; 对门进行测试
+	mov	ebx,message_2
+	call 	far[salt_1+256]	;通过门显示信息（偏移量将忽略）
+
+	mov	ebx,message_3
+	call	sys_routine_seg_sel:put_string ;在内核中调用例程不需要通过门
+	
+	
+	
 return_point:                                ;用户程序返回点
          mov eax,core_data_seg_sel           ;使ds指向核心数据段
          mov ds,eax
