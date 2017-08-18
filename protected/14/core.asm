@@ -481,11 +481,11 @@ load_relocate_program:
 
 	;; 以下开始加载用户程序
 	mov	eax,core_data_seg_sel
-	mov	ds,eax
-	
-         mov eax,esi                        ;读取程序头部数据 
-         mov ebx,core_buf                        
-         call sys_routine_seg_sel:read_hard_disk_0
+	mov	ds,eax		;切换DS到内核数据段
+
+	mov	eax,[ebp+12*4]	;从堆栈中取出用户程序起始扇区号
+	mov	ebx,core_buf	;读取程序头部数据
+        call 	sys_routine_seg_sel:read_hard_disk_0
 
          ;以下判断整个程序有多大
          mov eax,[core_buf]                 ;程序尺寸
@@ -497,7 +497,9 @@ load_relocate_program:
       
          mov ecx,eax                        ;实际需要申请的内存数量
          call sys_routine_seg_sel:allocate_memory
-         mov ebx,ecx                        ;ebx -> 申请到的内存首地址
+	mov	[es:esi+0x06],ecx 	;登记程序加载基地址到TCB中
+
+	mov ebx,ecx                        ;ebx -> 申请到的内存首地址
          push ebx                           ;保存该首地址 
          xor edx,edx
          mov ecx,512
@@ -513,53 +515,66 @@ load_relocate_program:
          inc eax
          loop .b1                           ;循环读，直到读完整个用户程序
 
+	mov	edi,[es:esi+0x06]	;获得程序加载基地址
          ;建立程序头部段描述符
-         pop edi                            ;恢复程序装载的首地址 
          mov eax,edi                        ;程序头部起始线性地址
          mov ebx,[edi+0x04]                 ;段长度
          dec ebx                            ;段界限 
-         mov ecx,0x00409200                 ;字节粒度的数据段描述符
+         mov ecx,0x0040f200                 ;字节粒度的数据段描述符,特权级3
          call sys_routine_seg_sel:make_seg_descriptor
-         call sys_routine_seg_sel:set_up_gdt_descriptor
-         mov [edi+0x04],cx                   
 
+	;; 安装头部段描述符到LDT中
+	mov	ebx,esi		;TCB的基地址
+	call	fill_descriptor_in_ldt
+	
+	or	cx,0000_0000_0000_0110B ;设置选择子的特权级为3
+	mov	[es:esi+0x44],cx	;登记程序头部段选择子到TCB
+	mov	[edi+0x04],cx		;和头部内
+	
          ;建立程序代码段描述符
          mov eax,edi
          add eax,[edi+0x14]                 ;代码起始线性地址
          mov ebx,[edi+0x18]                 ;段长度
          dec ebx                            ;段界限
-         mov ecx,0x00409800                 ;字节粒度的代码段描述符
+         mov ecx,0x0040f800                 ;字节粒度的代码段描述符,特权级3
          call sys_routine_seg_sel:make_seg_descriptor
-         call sys_routine_seg_sel:set_up_gdt_descriptor
-         mov [edi+0x14],cx
+	 mov 	ebx,esi		;TCB的基地址
+	 call 	fill_descriptor_in_ldt
+	 or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
+	 mov 	[edi+0x14],cx		;登记代码段选择子到头部
 
          ;建立程序数据段描述符
          mov eax,edi
          add eax,[edi+0x1c]                 ;数据段起始线性地址
          mov ebx,[edi+0x20]                 ;段长度
          dec ebx                            ;段界限
-         mov ecx,0x00409200                 ;字节粒度的数据段描述符
+         mov ecx,0x0040f200                 ;字节粒度的数据段描述符，特权级3
          call sys_routine_seg_sel:make_seg_descriptor
-         call sys_routine_seg_sel:set_up_gdt_descriptor
-         mov [edi+0x1c],cx
+	 mov	ebx,esi		;TCB的基地址
+	 call	fill_descriptor_in_ldt
+	 or	cx,0000_0000_0000_0011B ;设置选择子的特权级3
+         mov 	[edi+0x1c],cx
 
          ;建立程序堆栈段描述符
          mov ecx,[edi+0x0c]                 ;4KB的倍率 
          mov ebx,0x000fffff
          sub ebx,ecx                        ;得到段界限
-         mov eax,4096                        
-         mul dword [edi+0x0c]                         
-         mov ecx,eax                        ;准备为堆栈分配内存 
+         mov eax,4096
+	 mul ecx
+	 mov ecx,eax                        ;准备为堆栈分配内存 
          call sys_routine_seg_sel:allocate_memory
          add eax,ecx                        ;得到堆栈的高端物理地址 
          mov ecx,0x00c09600                 ;4KB粒度的堆栈段描述符
          call sys_routine_seg_sel:make_seg_descriptor
-         call sys_routine_seg_sel:set_up_gdt_descriptor
-         mov [edi+0x08],cx
-
+         mov	ebx,esi		;TCB的基地址
+	 call	fill_descriptor_in_ldt
+	 or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
+	 mov	[edi+0x08],cx		;登记堆栈段选择到头部
+	
          ;重定位SALT
-         mov eax,[edi+0x04]
-         mov es,eax                         ;es -> 用户程序头部 
+         mov eax,mem_0_4_gb_seg_sel ;头部段描述付已安装，但还没有生效
+         mov es,eax		    ;只能通过4GB段访问用户程序头部
+	
          mov eax,core_data_seg_sel
          mov ds,eax
       
@@ -584,7 +599,9 @@ load_relocate_program:
          mov eax,[esi]                      ;若匹配，esi恰好指向其后的地址数据
          mov [es:edi-256],eax               ;将字符串改写成偏移地址 
          mov ax,[esi+4]
-         mov [es:edi-252],ax                ;以及段选择子 
+	 or  ax,0000000000000011B ;用用户程序自己的特权级使用调用门 RPL=3
+	
+	 mov [es:edi-252],ax                ;回填调用门选择子
   .b4:
       
          pop ecx
