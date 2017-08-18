@@ -339,9 +339,16 @@ make_gate_descriptor:
 	mov	edx,eax
 	and 	edx,0xffff0000	;得到偏移地址高16位
 	or	dx,cx		;组装属性部分到EDX
-	
+	and	eax,0f0000ffff	;得到偏移地址低16位
+	shl	ebx,16
+	or	eax,ebx		;组装段选择子部分
 
+	pop	ecx
+	pop	ebx
+
+	retf
 	
+sys_routine_end:	
 	
 ;===============================================================================
 SECTION core_data vstart=0                  ;系统核心的数据段
@@ -381,8 +388,10 @@ SECTION core_data vstart=0                  ;系统核心的数据段
                           db  'core is loaded,and the video display '
                           db  'routine works perfectly.',0x0d,0x0a,0
 
-         message_5        db  '  Loading user program...',0
-         
+         message_2        db  '  System wide CALL-GATE mounted.',0x0d,0x0a,0
+
+	 message_3	  db  0x0d,0x0a,'  Loading user program...',0
+	
          do_status        db  'Done.',0x0d,0x0a,0
          
          message_6        db  0x0d,0x0a,0x0d,0x0a,0x0d,0x0a
@@ -397,6 +406,10 @@ SECTION core_data vstart=0                  ;系统核心的数据段
          cpu_brnd0        db 0x0d,0x0a,'  ',0
          cpu_brand  times 52 db 0
          cpu_brnd1        db 0x0d,0x0a,0x0d,0x0a,0
+
+	;; 任务控制块链
+	tcb_chain	dd 0
+code_data_end:	
 
 ;===============================================================================
 SECTION core_code vstart=0
@@ -442,22 +455,34 @@ fill_descriptor_in_ldt:
 	pop	eax
 
 	ret
-
-load_relocate_program:                      ;加载并重定位用户程序
-                                            ;输入：ESI=起始逻辑扇区号
-                                            ;返回：AX=指向用户程序头部的选择子 
-         push ebx
-         push ecx
-         push edx
-         push esi
-         push edi
-      
+;;; ----------------------------------------------------------------------
+	;; 加载并重定位用户程序
+	;; 输入:PUSH 逻辑扇区号
+	;;     PUSH 任务控制块基地址
+	;; 输出:无
+load_relocate_program:                     
+	pushad
+	
          push ds
          push es
-      
-         mov eax,core_data_seg_sel
-         mov ds,eax                         ;切换DS到内核数据段
-       
+
+	 mov ebp,esp		;为访问通过堆栈传递的参数做准备
+	
+         mov ecx,core_data_seg_sel
+         mov es,ecx
+
+	 mov esi,[ebp+11*4]	;从堆栈中取得TCB的基地址
+
+	;; 以下申请创建LDT所需要的内存
+	mov 	ecx,160		;允许安装20个LDT描述符
+	call 	sys_routine_seg_sel:allocate_memory
+	mov 	[es:esi+0x0c],ecx ;登记LDT基地址到TCB中
+	mov	word[es:esi+0x0a],0xffff ;登记LDT初始的界限到TCB中
+
+	;; 以下开始加载用户程序
+	mov	eax,core_data_seg_sel
+	mov	ds,eax
+	
          mov eax,esi                        ;读取程序头部数据 
          mov ebx,core_buf                        
          call sys_routine_seg_sel:read_hard_disk_0
