@@ -615,6 +615,72 @@ load_relocate_program:
          pop ecx
          loop .b2
 
+	 mov esi,[ebp+11*4]	;从堆栈中取得TC的基地址
+
+	;; 创建0特权级堆栈
+	mov	ecx,4096
+	mov	eax,ecx		;为生成堆栈高端地址做准备
+	mov	[es:esi+0x1a],ecx
+	shr	dword[es:esi+0x1a],12 ;登记0特权级堆栈尺寸到TCB
+	call	sys_routine_seg_sel:allocate_memory
+	add	eax,ecx		;堆栈必须使用高端地址为基地址
+	mov	[es:esi+0x1e],eax ;登记0特权级堆栈基地址到TCB
+	mov	ebx,0xffffe	  ;段长度
+	mov	ecx,0x00c09600	  ;4KB粒度，读写，特权级0
+	call	sys_routine_seg_sel:make_seg_descriptor
+	mov	ebx,esi		;TCB的基地址
+	call	fill_descriptor_in_ldt
+	;; or	cx,0000_0000_0000_0000 ;设置选择子的特权级为0
+	mov	[es:esi+0x22],cx ;登记0特权级堆栈选择子到TCB
+	mov	dword[es:esi+0x24],0 ;登记0特权级堆栈初始ESP到TCP
+
+	;; 创建1特权级堆栈
+	mov	ecx,4096
+	mov	eax,ecx		;为生成堆栈高端地址做准备
+	mov	[es:esi+0x28],ecx
+	shr	[es:esi+0x28],12 ;登记1特权级堆栈尺寸到TCB
+	call	sys_routine_seg_sel:allocate_memory
+	add	eax,ecx		;堆栈必须使用高端地址为基地址
+	mov	[es:esi+0x2c],eax ;登记1特权级堆栈基地址到TCB
+	mov	ebx,0xffffe	  ;段长度
+	mov	ecx,0x00c0b600	  ;4KB粒度，读写，特权级1
+	call	sys_routine_seg_sel:make_seg_descriptor
+	mov	ebx,esi		;TCB的基地址
+	call	fill_descriptor_in_ldt
+	or	cx,0000_0000_0000_0001 ;设置选择子的特权级为1
+	mov	[es:esi+0x30],cx ;登记0特权级堆栈选择子到TCB
+	mov	dword[es:esi+0x32],0 ;登记1特权级堆栈初始ESP到TCP
+	 
+
+	;; 创建2特权级堆栈
+	mov	ecx,4096
+	mov	eax,ecx		;为生成堆栈高端地址做准备
+	mov	[es:esi+0x36],ecx
+	shr	[es:esi+0x36],12 ;登记1特权级堆栈尺寸到TCB
+	call	sys_routine_seg_sel:allocate_memory
+	add	eax,ecx		;堆栈必须使用高端地址为基地址
+	;; ???
+	mov	[es:esi+0x3a],eax ;登记2特权级堆栈基地址到TCB
+	mov	ebx,0xffffe	  ;段长度
+	mov	ecx,0x00c0d600	  ;4KB粒度，读写，特权级2
+	call	sys_routine_seg_sel:make_seg_descriptor
+	mov	ebx,esi		;TCB的基地址
+	call	fill_descriptor_in_ldt
+	or	cx,0000_0000_0000_0010 ;设置选择子的特权级为1
+	mov	[es:esi+0x3e],cx ;登记0特权级堆栈选择子到TCB
+	mov	dword[es:esi+0x40],0 ;登记1特权级堆栈初始ESP到TCP
+
+	;; 在GDT中登记LDT描述符
+	mov	eax,[es:esi+0x0c] ;LDT的起始线性地址
+	movzx	ebx,word[es:esi+0x0a] ;LDT段界限
+	mov	ecx,0x00408200	      ;LDT描述符，特权级0
+	call	sys_routine_seg_sel:make_seg_descriptor
+	call	sys_routine_seg_sel:set_up_gdt_descriptor
+	mov	[es:esi+0x10],cx ;登记LDT选择子到TCB中
+
+	;; 创建用户程序的TSS
+
+	
          mov ax,[es:0x04]
 
          pop es                             ;恢复到调用此过程前的es段 
