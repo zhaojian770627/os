@@ -679,22 +679,90 @@ load_relocate_program:
 	mov	[es:esi+0x10],cx ;登记LDT选择子到TCB中
 
 	;; 创建用户程序的TSS
+	mov	ecx,104		;TSS的基本尺寸
+	mov	[es:esi+0x12],cx
+	dec	word[es:esi+0x12] ;登记TSS界限值到TCB
+	call	sys_routine_seg_sel:allocate_memory
+	mov	[es:esi+0x14],ecx ;登记TSS基地址到TCB
 
-	
-         mov ax,[es:0x04]
+	;; 登记基本的TSS表格内容
+	mov	word[es:ecx+0],0 ;反向链=0
 
-         pop es                             ;恢复到调用此过程前的es段 
-         pop ds                             ;恢复到调用此过程前的ds段
-      
-         pop edi
-         pop esi
-         pop edx
-         pop ecx
-         pop ebx
-      
-         ret
-      
+	mov	edx,[es:esi+0x24] ;登记0特权级堆栈初始ESP
+	mov	[es:ecx+4],edx	  ;到TSS中
+
+	mov	dx,[es:esi+0x22] ;登记0特权级堆栈选择子
+	mov	[es:ecx+8],dx	  ;到TSS中
+
+	mov	edx,[es:esi+0x32] ;登记1特权级堆栈初始ESP
+	mov	[es:ecx+12],edx	  ;到TSS中
+
+	mov	dx,[es:esi+0x30] ;登记1特权级堆栈选择子
+	mov	[es:ecx+16],dx	  ;到TSS中
+
+	mov	edx,[es:esi+0x40] ;登记2特权级堆栈初始ESP
+	mov	[es:ecx+20],edx	  ;到TSS中
+
+	mov	dx,[es:esi+0x3e]  ;登记2特权级堆栈选择子
+	mov	[es:ecx+24],dx	  ;到TSS中
+
+	mov	dx,[es:esi+0x10]  ;登记任务的LDT选择子
+	mov	[es:ecx+96],dx	  ;到TSS中
+
+	mov	dx,[es:esi+0x12]  ;登记任务I/O位图偏移
+	mov	[es:ecx+102],dx	  ;到TSS中
+
+	mov	word[es:ecx+100],0 ;T=0
+
+	;; 在GDT中登记TSS描述符
+	mov	eax,[es:esi+0x14] ;TSS的起始线性地址
+	movzx	ebx,word[es:esi+0x12] ;段长度
+	mov	ecx,0x00408900	      ;TSS描述符，特权级0
+	call 	sys_routine_seg_sel:make_seg_descriptor
+	call	sys_routine_seg_sel:set_up_gdt_descriptor
+	mov	[es:esi+0x18],cx ;登记TSS选择子到TCB
+
+	pop	es		;恢复到调用此过程的es段
+	pop	ds		;恢复到调用此过程的ds段
+
+	popad
+
+	ret 	8		;丢弃调用本过程前压入的参数
 ;-------------------------------------------------------------------------------
+	;; 在TCB链上追加任务控制块
+	;; 输入:ECX=TCB线性基地址
+append_to_tcb_link:	
+	push	eax
+	push	edx
+	push	ds
+	push	es
+
+	mov	eax,core_data_seg_sel ;令DS指向内核数据段
+	mov	ds,eax
+	mov	eax,mem_0_4_gb_seg_sel ;令ES指向0..4GB段
+	mov	es,eax
+
+	mov	dword[es:ecx+0x00],0 ;当前TCB指针域清零，以指示这是最后一个TCB
+	mov	eax,[tcb_chain]	     ;TCB表头指针
+	or	eax,eax		     ;链表为空?
+	jz	.notcb
+.searc:
+	mov	edx,eax
+	mov	eax,[es:edx+0x00]
+	or	eax,eax
+	jnz	.searc
+
+	mov	[es:edx+0x00],ecx
+	jmp	.retpc
+.notcb:
+	mov	[tcb_chain],ecx	;若为空表，直接令表头指针指向TCB
+.retpc:
+	pop	es
+	pop	ds
+	pop	edx
+	pop	eax
+	ret
+;;; -------------------------------------------------------------
 start:
          mov ecx,core_data_seg_sel           ;使ds指向核心数据段 
          mov ds,ecx
