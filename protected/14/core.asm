@@ -822,17 +822,44 @@ start:
 
 	mov	ebx,message_3
 	call	sys_routine_seg_sel:put_string ;在内核中调用例程不需要通过门
-	
-	
+
+	;; 创建任务控制块。这不是处理器的要求，而是我们自己为了方便而设立的
+	mov	ecx,0x46	
+	call	sys_routine_seg_sel:allocate_memory
+	call	append_to_tcb_link ;将任务控制块追加到TCB链表
+
+	push	dword 50	;用户程序位于逻辑50扇区
+	push	ecx		;压入任务控制块起始线性地址
+
+	call	load_relocate_program
+
+	mov	ebx,do_status
+	call 	sys_routine_seg_sel:put_string
+
+	mov	eax,mem_0_4_gb_seg_sel
+	mov	ds,eax
+
+	ltr	[ecx+0x18]	;加载任务状态段
+	lldt	[ecx+0x10]	;加载LDT
+
+	mov	eax,[ecx+0x44]
+	mov	ds,eax		;切换到用户程序头部段
+
+	;; 以下假装是从调用们返回。模仿处理起压入返回参数
+	push	dword[0x08]	;调用前的堆栈段选择子
+	push	dword 0		;调用前的esp
+
+	push	dword[0x14]	;调用前的代码段选择子
+	push 	dword[0x10]	;调用前的eip
+
+	retf
 	
 return_point:                                ;用户程序返回点
          mov eax,core_data_seg_sel           ;使ds指向核心数据段
          mov ds,eax
-
-         mov eax,core_stack_seg_sel          ;切换回内核自己的堆栈
-         mov ss,eax 
-         mov esp,[esp_pointer]
-
+.stop:
+	jmp .stop
+	
          mov ebx,message_6
          call sys_routine_seg_sel:put_string
 
