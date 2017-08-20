@@ -339,7 +339,7 @@ make_gate_descriptor:
 	mov	edx,eax
 	and 	edx,0xffff0000	;得到偏移地址高16位
 	or	dx,cx		;组装属性部分到EDX
-	and	eax,0f0000ffff	;得到偏移地址低16位
+	and	eax,0x0000ffff	;得到偏移地址低16位
 	shl	ebx,16
 	or	eax,ebx		;组装段选择子部分
 
@@ -638,7 +638,7 @@ load_relocate_program:
 	mov	ecx,4096
 	mov	eax,ecx		;为生成堆栈高端地址做准备
 	mov	[es:esi+0x28],ecx
-	shr	[es:esi+0x28],12 ;登记1特权级堆栈尺寸到TCB
+	shr	dword[es:esi+0x28],12 ;登记1特权级堆栈尺寸到TCB
 	call	sys_routine_seg_sel:allocate_memory
 	add	eax,ecx		;堆栈必须使用高端地址为基地址
 	mov	[es:esi+0x2c],eax ;登记1特权级堆栈基地址到TCB
@@ -656,7 +656,7 @@ load_relocate_program:
 	mov	ecx,4096
 	mov	eax,ecx		;为生成堆栈高端地址做准备
 	mov	[es:esi+0x36],ecx
-	shr	[es:esi+0x36],12 ;登记1特权级堆栈尺寸到TCB
+	shr	dword[es:esi+0x36],12 ;登记1特权级堆栈尺寸到TCB
 	call	sys_routine_seg_sel:allocate_memory
 	add	eax,ecx		;堆栈必须使用高端地址为基地址
 	;; ???
