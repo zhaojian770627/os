@@ -468,7 +468,7 @@ load_relocate_program:
 
 	 mov ebp,esp		;为访问通过堆栈传递的参数做准备
 	
-         mov ecx,core_data_seg_sel
+         mov ecx,mem_0_4_gb_seg_sel
          mov es,ecx
 
 	 mov esi,[ebp+11*4]	;从堆栈中取得TCB的基地址
@@ -488,40 +488,39 @@ load_relocate_program:
         call 	sys_routine_seg_sel:read_hard_disk_0
 
          ;以下判断整个程序有多大
-         mov eax,[core_buf]                 ;程序尺寸
-         mov ebx,eax
-         and ebx,0xfffffe00                 ;使之512字节对齐（能被512整除的数， 
-         add ebx,512                        ;低9位都为0 
-         test eax,0x000001ff                ;程序的大小正好是512的倍数吗? 
-         cmovnz eax,ebx                     ;不是。使用凑整的结果 
+        mov eax,[core_buf]                 ;程序尺寸
+        mov ebx,eax
+        and ebx,0xfffffe00                 ;使之512字节对齐（能被512整除的数， 
+        add ebx,512                        ;低9位都为0 
+        test eax,0x000001ff                ;程序的大小正好是512的倍数吗? 
+        cmovnz eax,ebx                     ;不是。使用凑整的结果 
       
-         mov ecx,eax                        ;实际需要申请的内存数量
-         call sys_routine_seg_sel:allocate_memory
+        mov ecx,eax                        ;实际需要申请的内存数量
+        call sys_routine_seg_sel:allocate_memory
 	mov	[es:esi+0x06],ecx 	;登记程序加载基地址到TCB中
 
 	mov ebx,ecx                        ;ebx -> 申请到的内存首地址
-         push ebx                           ;保存该首地址 
-         xor edx,edx
-         mov ecx,512
-         div ecx
-         mov ecx,eax                        ;总扇区数 
+        xor edx,edx
+        mov ecx,512
+        div ecx
+        mov ecx,eax                        ;总扇区数 
       
-         mov eax,mem_0_4_gb_seg_sel         ;切换DS到0-4GB的段
-         mov ds,eax
+        mov eax,mem_0_4_gb_seg_sel         ;切换DS到0-4GB的段
+        mov ds,eax
 
-         mov eax,esi                        ;起始扇区号 
-  .b1:
-         call sys_routine_seg_sel:read_hard_disk_0
-         inc eax
-         loop .b1                           ;循环读，直到读完整个用户程序
+        mov eax,[ebp+12*4]                        ;起始扇区号 
+.b1:
+	call sys_routine_seg_sel:read_hard_disk_0
+        inc eax
+        loop .b1                           ;循环读，直到读完整个用户程序
 
 	mov	edi,[es:esi+0x06]	;获得程序加载基地址
-         ;建立程序头部段描述符
-         mov eax,edi                        ;程序头部起始线性地址
-         mov ebx,[edi+0x04]                 ;段长度
-         dec ebx                            ;段界限 
-         mov ecx,0x0040f200                 ;字节粒度的数据段描述符,特权级3
-         call sys_routine_seg_sel:make_seg_descriptor
+        ;建立程序头部段描述符
+        mov eax,edi                        ;程序头部起始线性地址
+        mov ebx,[edi+0x04]                 ;段长度
+        dec ebx                            ;段界限 
+        mov ecx,0x0040f200                 ;字节粒度的数据段描述符,特权级3
+        call sys_routine_seg_sel:make_seg_descriptor
 
 	;; 安装头部段描述符到LDT中
 	mov	ebx,esi		;TCB的基地址
@@ -532,44 +531,44 @@ load_relocate_program:
 	mov	[edi+0x04],cx		;和头部内
 	
          ;建立程序代码段描述符
-         mov eax,edi
-         add eax,[edi+0x14]                 ;代码起始线性地址
-         mov ebx,[edi+0x18]                 ;段长度
-         dec ebx                            ;段界限
-         mov ecx,0x0040f800                 ;字节粒度的代码段描述符,特权级3
-         call sys_routine_seg_sel:make_seg_descriptor
-	 mov 	ebx,esi		;TCB的基地址
-	 call 	fill_descriptor_in_ldt
-	 or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
-	 mov 	[edi+0x14],cx		;登记代码段选择子到头部
+        mov 	eax,edi
+        add 	eax,[edi+0x14]                 ;代码起始线性地址
+        mov 	ebx,[edi+0x18]                 ;段长度
+        dec 	ebx                            ;段界限
+        mov 	ecx,0x0040f800                 ;字节粒度的代码段描述符,特权级3
+        call 	sys_routine_seg_sel:make_seg_descriptor
+	mov 	ebx,esi		;TCB的基地址
+	call 	fill_descriptor_in_ldt
+	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
+	mov 	[edi+0x14],cx		;登记代码段选择子到头部
 
-         ;建立程序数据段描述符
-         mov eax,edi
-         add eax,[edi+0x1c]                 ;数据段起始线性地址
-         mov ebx,[edi+0x20]                 ;段长度
-         dec ebx                            ;段界限
-         mov ecx,0x0040f200                 ;字节粒度的数据段描述符，特权级3
-         call sys_routine_seg_sel:make_seg_descriptor
-	 mov	ebx,esi		;TCB的基地址
-	 call	fill_descriptor_in_ldt
-	 or	cx,0000_0000_0000_0011B ;设置选择子的特权级3
-         mov 	[edi+0x1c],cx
+        ;建立程序数据段描述符
+        mov 	eax,edi
+        add 	eax,[edi+0x1c]                 ;数据段起始线性地址
+        mov 	ebx,[edi+0x20]                 ;段长度
+        dec 	ebx                            ;段界限
+        mov 	ecx,0x0040f200                 ;字节粒度的数据段描述符，特权级3
+        call	sys_routine_seg_sel:make_seg_descriptor
+	mov	ebx,esi				;TCB的基地址
+	call	fill_descriptor_in_ldt
+	or	cx,0000_0000_0000_0011B ;设置选择子的特权级3
+        mov 	[edi+0x1c],cx
 
-         ;建立程序堆栈段描述符
-         mov ecx,[edi+0x0c]                 ;4KB的倍率 
-         mov ebx,0x000fffff
-         sub ebx,ecx                        ;得到段界限
-         mov eax,4096
-	 mul ecx
-	 mov ecx,eax                        ;准备为堆栈分配内存 
-         call sys_routine_seg_sel:allocate_memory
-         add eax,ecx                        ;得到堆栈的高端物理地址 
-         mov ecx,0x00c09600                 ;4KB粒度的堆栈段描述符
-         call sys_routine_seg_sel:make_seg_descriptor
-         mov	ebx,esi		;TCB的基地址
-	 call	fill_descriptor_in_ldt
-	 or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
-	 mov	[edi+0x08],cx		;登记堆栈段选择到头部
+        ;建立程序堆栈段描述符
+        mov 	ecx,[edi+0x0c]                 ;4KB的倍率 
+        mov 	ebx,0x000fffff
+        sub 	ebx,ecx                        ;得到段界限
+        mov 	eax,4096
+	mul 	ecx
+	mov 	ecx,eax                        ;准备为堆栈分配内存 
+        call 	sys_routine_seg_sel:allocate_memory
+        add 	eax,ecx                        ;得到堆栈的高端物理地址 
+        mov 	ecx,0x00c09600                 ;4KB粒度的堆栈段描述符
+        call 	sys_routine_seg_sel:make_seg_descriptor
+        mov	ebx,esi		;TCB的基地址
+	call	fill_descriptor_in_ldt
+	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
+	mov	[edi+0x08],cx		;登记堆栈段选择到头部
 	
          ;重定位SALT
          mov eax,mem_0_4_gb_seg_sel ;头部段描述付已安装，但还没有生效
