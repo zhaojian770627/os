@@ -580,7 +580,7 @@ load_relocate_program:
          cld
 
          mov ecx,[es:0x24]                  ;用户程序的SALT条目数
-         mov edi,0x28                       ;用户程序内的SALT位于头部内0x2c处
+         add edi,0x28                       ;用户程序内的SALT位于头部内0x2c处
   .b2: 
          push ecx
          push edi
