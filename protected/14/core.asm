@@ -526,7 +526,7 @@ load_relocate_program:
 	mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
 	
-	or	cx,0000_0000_0000_0110B ;设置选择子的特权级为3
+	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
 	mov	[es:esi+0x44],cx	;登记程序头部段选择子到TCB
 	mov	[edi+0x04],cx		;和头部内
 	
@@ -563,7 +563,7 @@ load_relocate_program:
 	mov 	ecx,eax                        ;准备为堆栈分配内存 
         call 	sys_routine_seg_sel:allocate_memory
         add 	eax,ecx                        ;得到堆栈的高端物理地址 
-        mov 	ecx,0x00c09600                 ;4KB粒度的堆栈段描述符
+        mov 	ecx,0x00c0f600                 ;4KB粒度的堆栈段描述符
         call 	sys_routine_seg_sel:make_seg_descriptor
         mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
@@ -629,7 +629,7 @@ load_relocate_program:
 	call	sys_routine_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
-	;; or	cx,0000_0000_0000_0000 ;设置选择子的特权级为0
+	;; or	cx,0000_0000_0000_0000B ;设置选择子的特权级为0
 	mov	[es:esi+0x22],cx ;登记0特权级堆栈选择子到TCB
 	mov	dword[es:esi+0x24],0 ;登记0特权级堆栈初始ESP到TCP
 
@@ -646,7 +646,7 @@ load_relocate_program:
 	call	sys_routine_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
-	or	cx,0000_0000_0000_0001 ;设置选择子的特权级为1
+	or	cx,0000_0000_0000_0001B ;设置选择子的特权级为1
 	mov	[es:esi+0x30],cx ;登记0特权级堆栈选择子到TCB
 	mov	dword[es:esi+0x32],0 ;登记1特权级堆栈初始ESP到TCP
 	 
@@ -665,8 +665,8 @@ load_relocate_program:
 	call	sys_routine_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
-	or	cx,0000_0000_0000_0010 ;设置选择子的特权级为1
-	mov	[es:esi+0x3e],cx ;登记0特权级堆栈选择子到TCB
+	or	cx,0000_0000_0000_0010B ;设置选择子的特权级为2
+	mov	[es:esi+0x3e],cx ;登记2特权级堆栈选择子到TCB
 	mov	dword[es:esi+0x40],0 ;登记1特权级堆栈初始ESP到TCP
 
 	;; 在GDT中登记LDT描述符
