@@ -136,7 +136,7 @@ dispstr:
          sub ebx,eax
          dec ebx                            ;核心代码段界限
          add eax,edi                        ;核心代码段基地址
-         mov ecx,0x00409800                 ;字节粒度的代码段描述符
+         mov ecx,0x00409800                 ;字节粒度的代码段描述符 非依从的，如果改成依从的需要改为 0x00409c00
          call make_gdt_descriptor
          mov [esi+0x38],eax
          mov [esi+0x3c],edx
