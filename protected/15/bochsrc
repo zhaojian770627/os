@@ -1,0 +1,18 @@
+megs:32
+
+romimage:file=/usr/local/share/bochs/BIOS-bochs-latest
+vgaromimage:file=/usr/local/share/bochs/VGABIOS-lgpl-latest
+
+#floppya:1_44=protected.img,status=inserted
+
+boot:disk
+
+ata0:enabled=1,ioaddr1=0x1f0,ioaddr2=0x3f0,irq=14
+ata0-master:type=disk,path=/home/zj/imgs/disk.vhd,mode=flat,cylinders=1003,heads=12,spt=17,model="Generic 1234",biosdetect=auto,translation=auto
+
+
+log:bochsout.txt
+
+mouse:enabled=0
+
+keyboard:keymap=/usr/local/share/bochs/keymaps/x11-pc-us.map
