@@ -39,13 +39,12 @@ header_end:
 
 ;===============================================================================
 SECTION data vstart=0    
-                         
-         buffer times 1024 db  0         ;缓冲区
-
-         message_1         db  0x0d,0x0a,0x0d,0x0a
-                           db  '**********User program is runing**********'
-                           db  0x0d,0x0a,0
-         message_2         db  '  Disk data:',0x0d,0x0a,0
+         message_1        db  0x0d,0x0a
+                          db  '[USER TASK]: Hi! nice to meet you,'
+                          db  'I am run at CPL=',0
+                          
+         message_2        db  0
+                          db  '.Now,I must exit...',0x0d,0x0a,0
 
 data_end:
 
@@ -54,31 +53,25 @@ data_end:
 ;===============================================================================
 SECTION code vstart=0
 start:
-         mov eax,ds
-         mov fs,eax
-     
-         mov eax,[stack_seg]
-         mov ss,eax
-         mov esp,0
-     
-         mov eax,[data_seg]
-         mov ds,eax
-     
-         mov ebx,message_1
-         call far [fs:PrintString]
-     
-         mov eax,100                         ;逻辑扇区号100
-         mov ebx,buffer                      ;缓冲区偏移地址
-         call far [fs:ReadDiskData]          ;段间调用
-     
-         mov ebx,message_2
-         call far [fs:PrintString]
-     
-         mov ebx,buffer 
-         call far [fs:PrintString]           ;too.
-     
-         jmp far [fs:TerminateProgram]       ;将控制权返回到系统 
-      
+	;; 任务启动时，DS指向头部段，也不需要设置堆栈
+	mov	eax,ds
+	mov	fs,eax
+
+	mov	eax,[data_seg]
+	mov	ds,eax
+
+	mov	ebx,message_1
+	call	far[fs:PrintString]
+
+	mov	ax,cs
+	and 	al,0000_0011B
+	or 	al,0x0030
+	mov	[message_2],al
+
+	mov	ebx,message_2
+	call	far[fs:PrintString]
+
+	call	far[fs:TerminateProgram] ;退出，并将控制权返回到核心
 code_end:
 
 ;===============================================================================

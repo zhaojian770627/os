@@ -398,8 +398,8 @@ SECTION core_data vstart=0                  ;系统核心的数据段
 
          salt_4           db  '@TerminateProgram'
                      times 256-($-salt_4) db 0
-                          dd  return_point
-                          dw  core_code_seg_sel
+                          dd  terminate_current_task
+                          dw  sys_routine_seg_sel
 
          salt_item_len   equ $-salt_4
          salt_items      equ ($-salt)/salt_item_len
@@ -755,6 +755,33 @@ load_relocate_program:
 
 	mov	word[es:ecx+100],0 ;T=0
 
+	mov	dword[es:ecx+28],0 ;登记CR3（PDBR）
+
+	;; 访问用户程序头部，获取数据填充TSS
+	mov	ebx,[ebp+11*4]	;从堆栈中取得TCB的基地址
+	mov	edi,[es:ebx+0x06] ;用户程序加载的基地址
+
+	mov	edx,[es:edi+0x10] ;登记程序入口点（EIP）
+	mov	[es:ecx+32],edx	  ;到TSS
+
+	mov	dx,[es:edi+0x14] ;登记程序代码段（CS）选择子
+	mov	[es:ecx+76],dx	 ;到TSS中
+
+	mov	dx,[es:edi+0x08] ;登记程序堆栈段（SS）选择子
+	mov	[es:ecx+80],dx	 ;到TSS中
+
+	mov	dx,[es:edi+0x04] ;登记程序数据段（DS）选择子
+	mov	word[es:ecx+84],dx
+
+	mov	word[es:ecx+72],0 ;TSS中ES=0
+	mov	word[es:ecx+88],0 ;TSS中FS=0
+	mov	word[es:ecx+92],0 ;TSS中GS=0
+
+	pushfd
+	pop	edx
+
+	mov	dword[es:ecx+36],edx ;EFLAGS
+	
 	;; 在GDT中登记TSS描述符
 	mov	eax,[es:esi+0x14] ;TSS的起始线性地址
 	movzx	ebx,word[es:esi+0x12] ;段长度
