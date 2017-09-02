@@ -917,10 +917,6 @@ start:
 	mov	ebx,prgman_msg1
 	call	sys_routine_seg_sel:put_string
 
-	mov	ecx,0x46
-	call	sys_routine_seg_sel:put_string
-	
-
 	mov	ecx,0x46	
 	call	sys_routine_seg_sel:allocate_memory
 	call	append_to_tcb_link ;将任务控制块追加到TCB链表
