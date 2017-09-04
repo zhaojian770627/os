@@ -1,4 +1,5 @@
 #
+CFLAGS+=-g
 EXEF:=hello moveadd ipmode multiw1 subscl keypad color pad curses
 all:$(EXEF)
 curses:curses.o -lncurses
