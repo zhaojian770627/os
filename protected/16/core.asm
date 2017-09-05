@@ -348,6 +348,66 @@ make_gate_descriptor:
 
 	retf
 
+;;; ----------------------------------------------------------
+	;; 分配一个4KB的页
+	;; 输入：无
+	;; 输出:EAX=页的物理地址
+allocate_a_4k_page:	
+	push	ebx
+	push	ecx
+	push	edx
+	push	ds
+
+	mov	eax,core_data_seg_sel
+	mov	ds,eax
+
+	xor	eax,eax
+.b1:
+	bts	[page_bit_map],eax
+	jnc	.b2
+	inc	eax
+	cmp	eax,page_map_len*8
+	jl	.b1
+
+	mov	ebx,message_3
+	call	sys_routine_seg_sel:put_string
+	hlt			;没有可以分配的页，停机
+
+.b2:
+	shl	eax,12		;乘以4096(0x1000)
+
+	pop	ds
+	pop	edx
+	pop	ecx
+	pop	ebx
+
+	ret
+;;; ----------------------------------------------------------
+	;; 分配一个页，并安装在当前活动的层级分页结构中
+	;; 输入:EBX=页的线性地址
+alloc_inst_a_page:	
+	push	eax
+	push	ebx
+	push	esi
+	push	ds
+
+	mov	eax,mem_0_4_gb_seg_sel
+	mov	ds,eax
+
+	;; 检查该线性地址所对应的页表是否存在
+	mov	esi,ebx
+	and	esi,0xffc00000
+	shr	esi,20		;得到页目录索引，并乘以4
+	or	esi,0xfffff000	;页目录自身的线性地址+表内偏移
+
+	test	dword[esi],0x00000001 ;p位是否我“1”。检查线性地址是
+	jnz	.b1		      ;否已经有对应的页表
+
+	;; 创建该线性地址所对应的页表
+	call	allocate_a_4k_page ;分配一个页作为页表
+	or	eax,0x00000007
+	mov	[esi],eax	;在页目录中登记该页表
+
 ;;; -----------------------------------------------------------
 	;; 终止当前任务
 	;; 注意，当前任务仍在运行中。此例程起始也是当前任务的一部分
@@ -377,8 +437,17 @@ SECTION core_data vstart=0                  ;系统核心的数据段
          pgdt             dw  0             ;用于设置和修改GDT 
                           dd  0
 
-         ram_alloc        dd  0x00100000    ;下次分配内存时的起始地址
 
+         page_bit_map     db  0xff,0xff,0xff,0xff,0xff,0x55,0x55,0xff
+                          db  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
+                          db  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
+                          db  0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
+                          db  0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55
+                          db  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+                          db  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+                          db  0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+         page_map_len     equ $-page_bit_map
+	
          ;符号地址检索表
          salt:
          salt_1           db  '@PrintString'
@@ -404,13 +473,21 @@ SECTION core_data vstart=0                  ;系统核心的数据段
          salt_item_len   equ $-salt_4
          salt_items      equ ($-salt)/salt_item_len
 
-         message_1        db  '  If you seen this message,that means we '
-                          db  'are now in protect mode,and the system '
-                          db  'core is loaded,and the video display '
-                          db  'routine works perfectly.',0x0d,0x0a,0
+	 message_0        db  '  Working in system core,protect mode.'
+                          db  0x0d,0x0a,0
 
-         message_2        db  '  System wide CALL-GATE mounted.',0x0d,0x0a,0
-
+         message_1        db  '  Paging is enabled.System core is mapped to'
+                          db  ' address 0x80000000.',0x0d,0x0a,0
+         
+         message_2        db  0x0d,0x0a
+                          db  '  System wide CALL-GATE mounted.',0x0d,0x0a,0
+         
+         message_3        db  '********No more pages********',0
+         
+         message_4        db  0x0d,0x0a,'  Task switching...@_@',0x0d,0x0a,0
+         
+         message_5        db  0x0d,0x0a,'  Processor HALT.',0
+	
          bin_hex          db '0123456789ABCDEF'
                                             ;put_hex_dword子过程用的查找表 
          core_buf   times 2048 db 0         ;内核用的缓冲区
@@ -422,35 +499,11 @@ SECTION core_data vstart=0                  ;系统核心的数据段
 	;; 任务控制块链
 	tcb_chain	dd 0
 
-	;; 任务控制块链
-	prgman_tss	dd	0 ;程序管理器的TSS基地址
+	;; 内核信息
+	core_next_laddr	dd	0x80100000 ;内核空间中下一个可分配的线性地址
+	prgman_man_tss	dd	0 ;程序管理器的TSS基地址
 			dw	0 ;程序管理器的TSS描述符选择子
 
-	prgman_msg1      db  0x0d,0x0a
-                         db  '[PROGRAM MANAGER]: Hello! I am Program Manager,'
-                         db  'run at CPL=0.Now,create user task and switch '
-                         db  'to it by the CALL instruction...',0x0d,0x0a,0
-
-	prgman_msg2      db  0x0d,0x0a
-                         db  '[PROGRAM MANAGER]: I am glad to regain control.'
-                         db  'Now,create another user task and switch to '
-                         db  'it by the JMP instruction...',0x0d,0x0a,0
-                
-        prgman_msg3      db  0x0d,0x0a
-                         db  '[PROGRAM MANAGER]: I am gain control again,'
-                         db  'HALT...',0
-
-        core_msg0        db  0x0d,0x0a
-                         db  '[SYSTEM CORE]: Uh...This task initiated with '
-                         db  'CALL instruction or an exeception/ interrupt,'
-                         db  'should use IRETD instruction to switch back...'
-                         db  0x0d,0x0a,0
-
-        core_msg1        db  0x0d,0x0a
-                         db  '[SYSTEM CORE]: Uh...This task initiated with '
-                         db  'JMP instruction,  should switch to Program '
-                         db  'Manager directly by the JMP instruction...'
-                         db  0x0d,0x0a,0
 code_data_end:	
 
 ;===============================================================================
