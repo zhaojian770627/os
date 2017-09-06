@@ -67,7 +67,7 @@ int main()
     case 'q':
       break;
     case 'a':
-      // add_record();
+      add_record();
       break;
     case 'c':
       //count_cds();
@@ -177,4 +177,37 @@ void clear_all_screen()
     mvprintw(ERROR_LINE,0,"current CD:%s:%s\n",current_cat,current_cd);
   }
   refresh();
+}
+
+void get_return()
+{
+  int ch;
+  mvprintw(23,0,"%s","Press return ");
+  refresh();
+  while((ch=getchar())!='\n' && ch!=EOF);
+}
+
+int get_confirm()
+{
+  int confirmed=0;
+  char first_char='N';
+
+  mvprintw(Q_LINE,5,"Are you sure?");
+  clrtoeol();
+  refresh();
+
+  cbreak();
+  first_char=getch();
+  if(first_char=='Y' || first_char=='y'){
+    confirmed=1;
+  }
+  nocbreak();
+
+  if(!confirmed){
+    mvprintw(Q_LINE,1,"    Cancelled");
+    clrtoeol();
+    refresh();
+    sleep(1);
+  }
+  return confirmed;
 }
