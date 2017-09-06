@@ -211,3 +211,14 @@ int get_confirm()
   }
   return confirmed;
 }
+
+void insert_title(char *cdtitle)
+{
+  FILE *fp=fopen(title_file,"a");
+  if(!fp){
+    mvprintw(ERROR_LINE,0,"cannot open CD titles database");
+  } else{
+    fprintf(fp,"%s\n",cdtitle);
+    fclose(fp);
+  }
+}
