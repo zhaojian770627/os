@@ -340,3 +340,61 @@ void find_cd()
     get_return();
   }
 }
+
+void remove_tracks()
+{
+  FILE *tracks_fp,*temp_fp;
+  char entry[MAX_ENTRY];
+  int cat_length;
+
+  if(current_cd[0]=='\0')
+    return;
+
+  cat_length=strlen(current_cat);
+
+  tracks_fp=fopen(tracks_file,"r");
+  temp_fp=fopen(temp_file,"w");
+
+  while(fgets(entry,MAX_ENTRY,tracks_fp)){
+    if(strncmp(current_cat,entry,cat_length)!=0)
+      fputs(entry,temp_fp);
+  }
+  fclose(tracks_fp);
+  fclose(temp_fp);
+  unlink(tracks_file);
+  rename(temp_file,tracks_file);
+}
+
+void remove_cd()
+{
+  FILE *titles_fp,*temp_fp;
+  char entry[MAX_ENTRY];
+  int cat_length;
+
+  if(current_cd[0]=='\0')
+    return;
+
+  clear_all_screen();
+  mvprintw(PROMPT_LINE,0,"About to remove CD %s：%s.",current_cat,current_cd);
+  if(!get_confirm())
+    return;
+
+  cat_length=strlen(current_cat);
+
+  titles_fp=fopen(title_file,"r");
+  temp_fp=fopen(temp_file,"w");
+
+  while(fgets(entry,MAX_ENTRY,titles_fp)){
+    if(strncmp(current_cat,entry,cat_length)!=0)
+      fputs(entry,temp_fp);
+  }
+  fclose(titles_fp);
+  fclose(temp_fp);
+
+  unlink(title_file);
+  rename(temp_file,title_file);
+
+  remove_tracks();
+
+  current_cd[0]='\0';
+}
