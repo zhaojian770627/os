@@ -398,3 +398,17 @@ void remove_cd()
 
   current_cd[0]='\0';
 }
+
+#define BOXED_LINES 11
+#define BOXED_ROWS 60
+#define BOX_LINE_POS 8
+#define BOX_ROW_POS 2
+
+void list_tracks()
+{
+  FILE *tracks_fp;
+  char entry[MAX_ENTRY];
+  int cat_length;
+  int lines_op=0;
+  WINDOW *track_pad_ptr;
+
