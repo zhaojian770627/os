@@ -412,3 +412,68 @@ void list_tracks()
   int lines_op=0;
   WINDOW *track_pad_ptr;
 
+  int tracks=0;
+  int key;
+  int first_line=0;
+
+  if(current_cd[0]=='\0'){
+    mvprintw(ERROR_LINE,0,"You must select a CD first.",stdout);
+    get_return();
+    return;
+  }
+  clear_all_screen();
+  cat_length=strlen(current_cat);
+
+  tracks_fp=fopen(tracks_file,"r");
+  if(!tracks_fp)
+    return;
+
+  while(fgets(entry,MAX_ENTRY,tracks_fp)){
+    if(strncmp(current_cat,entry,cat_length)==0)
+      tracks++;
+  }
+  fclose(tracks_fp);
+
+  track_pad_ptr=newpad(tracks+1+BOXED_LINES,BOXED_ROWS+1);
+  if(!track_pad_ptr)
+    return;
+
+  mvprintw(4,0,"CD Track Listing\n");
+
+  while(fgets(entry,MAX_ENTRY,tracks_fp)){
+    if(strncmp(current_cat,entry,cat_length)==0){
+      mvprintw(track_pad_ptr,lines_op++,0,"%s",entry+cat_length+1);
+    }
+  }
+  fclose(tracks_fp);
+
+  if(lines_op>BOXED_LINES){
+    mvprintw(MESSAGE_LINE,0,"Cursor keys to scroll,RETURN or q to exit");
+  }else{
+    mvprintw(MESSAGE_LINE,0,"RETURN or q to exit");
+  }
+  wrefresh(stdscr);
+  keypad(stdscr,TRUE);
+  cbreak();
+  noecho();
+
+  key=0;
+  while(key!='q' && key !=KEY_ENTER && key!='\n'){
+    if(key==KEY_UP){
+      if(first_line>0)
+	first_line--;
+    }
+    if(key==KEY_DOWN){
+      if(first_line+BOXED_LINES+1<tracks)
+	first_line++;
+    }
+    prefresh(track_pad_ptr,first_line,0,BOX_LINE_POS,BOX_ROW_POS,
+	     BOX_LINE_POS+BOXED_LINES,BOX_ROW_POS+BOXED_ROWS);
+
+    key=getch();
+  }
+  delwin(track_pad_ptr);
+  keypad(stdscr,FALSE);
+  nocbreak();
+  echo();
+}
