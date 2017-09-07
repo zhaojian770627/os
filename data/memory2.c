@@ -10,7 +10,7 @@ int main()
   size_t size_to_allocate=A_MEGABYTE;
   int megs_obtained=0;
 
-  while(megs_obtained<10240){
+  while(megs_obtained<8000){
     some_memory=(char*)malloc(size_to_allocate);
     if(some_memory!=NULL){
       megs_obtained++;
@@ -20,5 +20,6 @@ int main()
       exit(EXIT_FAILURE);
     }
   }
+
   exit(EXIT_SUCCESS);
 }
