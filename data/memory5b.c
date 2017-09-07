@@ -4,10 +4,7 @@
 
 int main()
 {
-  char *some_memory=(char*)0;
-
-  printf("A read from null %s\n",some_memory); 
-  sprintf(some_memory,"A write to null\n");
- 
+  char z=*(const char*)0;
+  printf("I read from location zero\n");
   exit(EXIT_SUCCESS);
 }
