@@ -276,3 +276,26 @@ void add_record()
     strcpy(current_cat,catalog_number);
   }
 }
+
+void count_cds()
+{
+  FILE *titles_fp,*stracks_fp;
+  char entry[MAX_STRING];
+  int titles=0;
+  int tracks=0;
+
+  titles_fp=fopen(titles_fp,"r");
+  if(titles_fp){
+    while(fgets(entry,MAX_ENTRY,titles_fp))
+      titles++;
+    fclose(titles_fp);
+  }
+  tracks_fp=fopen(tracks_file,"r");
+  if(tracks_fp){
+    while(fgets(entry,MAX_ENTRY,tracks_fp))
+      tracks++;
+    fclose(tracks_fp);
+  }
+  mvprintw(ERROR_LINE,0,"Database contains %d titles,with a total of %d tracks.",titles,tracks);
+  get_return();
+}
