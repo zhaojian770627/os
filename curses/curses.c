@@ -299,3 +299,20 @@ void count_cds()
   mvprintw(ERROR_LINE,0,"Database contains %d titles,with a total of %d tracks.",titles,tracks);
   get_return();
 }
+
+void find_cd()
+{
+  char match[MAX_STRING],entry[MAX_ENTRY];
+  FILE *titles_fp;
+  int count=0;
+  char *found,*title,*catalog;
+
+  mvprintw(Q_LINE,0,"Enter a string to search for in CD titles:");
+  get_string(match);
+
+  titles_fp=fopen(title_file,"r");
+  if(title_fp){
+    while(fgets(entry,MAX_ENTRY,title_fp)){
+      catalog=entry;		/* skip past catalog number */
+      if(found=strstr(catalog,",")){
+	*found=0;
