@@ -316,3 +316,27 @@ void find_cd()
       catalog=entry;		/* skip past catalog number */
       if(found=strstr(catalog,",")){
 	*found=0;
+	title=found+1;
+
+	if(found=strstr(title,",")){
+	  *found='\0';
+
+	  if(found=strstr(title,match)){
+	    count++;
+	    strcpy(current_cd,title);
+	    strcpy(current_cat,catalog);
+	  }
+	}
+      }
+    }
+    fclose(titles_fp);
+  }
+  if(count!=1){
+    if(count==0)
+      mvprintw(ERROR_LINE,0,"Sorry,no matching CD found.");
+    if(count>1)
+      mvprintw(ERROR_LINE,0,"Sorry,match is ambiguous:%d CDs found.",count);
+    current_cd[0]='\0';
+    get_return();
+  }
+}
