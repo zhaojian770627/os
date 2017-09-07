@@ -477,3 +477,62 @@ void list_tracks()
   nocbreak();
   echo();
 }
+
+void update_cd()
+{
+  FILE *tracks_fp;
+  char track_name[MAX_STRING];
+  int len;
+  int track=1;
+  int screen_line=1;
+  WINDOW *box_window_ptr;
+  WINDOW *sub_window_ptr;
+
+  clear_all_screen();
+  mvprintw(PROMPT_LINE,0,"Re-entering tracks for CD.");
+  if(!get_confirm())
+    return;
+  move(PROMPT_LINE,0);
+  clrtoeol();
+
+  remove_tracks();
+
+  mvprintw(MESSAGE_LINE,0,"Enter a blank line to finish");
+
+  tracks_fp=fopen(tracks_fp,"a");
+
+  box_window_ptr=subwin(stdscr,BOXED_LINES+2,BOXED_ROWS+2,
+			BOX_LINE_POS-1,BOX_ROW_POS-1);
+  if(!box_row_pos)
+    return;
+
+  box(box_window_ptr,ACS_VLINE,ACS_HLINE);
+
+  sub_window_ptr=subwin(stdscr,BOXED_LINES,BOXED_ROWS,
+			BOX_LINE_POS,BOX_ROW_POS);
+  if(!sub_window_ptr)
+    return;
+  scrollok(sub_window_ptr,TRUE);
+  werase(sub_window_ptr);
+  touchwin(stdscr);
+
+  do{
+    mvprintw(sub_window_ptr,screen_line++,BOX_ROW_POS+2,"Track %d:",track);
+    clrtoeol();
+    refresh();
+    wgetnstr(sub_window_ptr,track_name,MAX_STRING);
+    len=strlen(track_name);
+    if(len>0 && track_name[len-1]=='\n')
+      track_name[len-1]='\0';
+
+    if(*track_name)
+      fprintf(tracks_fp,"%s,%d,%s\n",current_cat,track,track_name);
+    track++;
+    if(screen_line>BOXED_LINES-1){
+      scroll(sub_window_ptr);
+      screen_line--;
+    }
+  }while(*track_name);
+  delwin(sub_window_ptr);
+  fclose(tracks_fp);
+}
