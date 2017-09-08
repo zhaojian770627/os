@@ -1,7 +1,9 @@
 #
 CFLAGS+=-g
-EXEF:=memory1 memory2 memory3 memory4 memory5a  memory5b memory6
+EXEF:=memory1 memory2 memory3 memory4 memory5a  memory5b memory6 lock1 lock2
 all:$(EXEF)
+lock2:lock2.o
+lock1:lock1.o
 memory6:memory6.o
 memory5b:memory5b.o
 memory5a:memory5a.o
