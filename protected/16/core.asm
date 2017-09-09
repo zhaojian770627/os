@@ -407,30 +407,79 @@ alloc_inst_a_page:
 	call	allocate_a_4k_page ;分配一个页作为页表
 	or	eax,0x00000007
 	mov	[esi],eax	;在页目录中登记该页表
+.b1:
+	;; 开始访问该线性地址所对应的页表
+	mov	esi,ebx
+	shr	esi,10
+	and 	esi,0x003ff000	;或者0xfffff000,因高10位是0
+	or	esi,0xffc00000	;得到该页表的线性地址
 
+	;; 得到该线性地址在页表内的对应条目（页表项）
+	and 	ebx,0x003ff000
+	shr	ebx,10		;相当于右移12位，再乘以4
+	or	esi,ebx		;页表项的线性地址
+	call	allocate_a_4k_page ;分配一个页，这才是要安装的页
+	or	ebx,0x00000007
+	mov	[esi],eax
+
+	pop	ds
+	pop	esi
+	pop	ebx
+	pop	eax
+
+	retf
+;;; -----------------------------------------------------------
+	;; 创建新页目录，并赋值当前页目录内容
+	;; 输入:无
+	;; 输出:EAX=新页目录的物理地址
+create_copy_cur_pdir:	
+	push	ds
+	push	es
+	push	esi
+	push	edi
+	push	ebx
+	push	ecx
+
+	mov	ebx,mem_0_4_gb_seg_sel
+	mov	ds,ebx
+	mov	es,ebx
+
+	call	allocate_a_4k_page
+	mov	ebx,eax
+	or	ebx,0x00000007
+	mov	[0xfffffff8],ebx
+
+	mov	esi,0xfffff000	;ESI->当前页目录的线性地址
+	mov	edi,0xffffe000	;EDI->新页目录的线性地址
+	mov	ecx,1024	;ECX=要复制的目录项数
+	cld
+	repe	movsd
+
+	pop	ecx
+	pop	ebx
+	pop	edi
+	pop	esi
+	pop	es
+	pop	ds
+	
+	retf
 ;;; -----------------------------------------------------------
 	;; 终止当前任务
 	;; 注意，当前任务仍在运行中。此例程起始也是当前任务的一部分
 terminate_current_task:	
-	pushfd
-	mov	edx,[esp]	;获得EFLAGS寄存器的内容
-	add	esp,4		;恢复堆栈指针
-
 	mov	eax,core_data_seg_sel
 	mov	ds,eax
 
+	pushfd
+	pop	edx
+	
 	test	dx,0100_0000_0000_0000B ;测试NT位
 	jnz	.b1			;当前任务是嵌套的，到.b1执行iretd
-	mov	ebx,core_msg1		;当前任务不是嵌套的，直接切换到
-	call	sys_routine_seg_sel:put_string
-	jmp	far [prgman_tss] ;程序管理器任务
+	jmp	far [prgman_man_tss]	;程序管理器任务
 .b1:
-	mov	ebx,core_msg0
-	call	sys_routine_seg_sel:put_string
+
 	iretd
-	
 sys_routine_end:	
-	
 ;===============================================================================
 SECTION core_data vstart=0                  ;系统核心的数据段
 ;-------------------------------------------------------------------------------
@@ -558,23 +607,24 @@ fill_descriptor_in_ldt:
 load_relocate_program:                     
 	pushad
 	
-         push ds
-         push es
+        push 	ds
+        push 	es
 
-	 mov ebp,esp		;为访问通过堆栈传递的参数做准备
+	mov 	ebp,esp		;为访问通过堆栈传递的参数做准备
 	
-         mov ecx,mem_0_4_gb_seg_sel
-         mov es,ecx
+        mov 	ecx,mem_0_4_gb_seg_sel
+        mov 	es,ecx
 
-	 mov esi,[ebp+11*4]	;从堆栈中取得TCB的基地址
+	;; 清空当前页目录的前半部分（对应低2GB的局部地址空间）
+	mov	ebx,0xfffff000
+	xor 	esi,esi
+.b1:
+	mov	dword[es:ebx+esi*4],0x00000000
+	inc	esi
+	cmp	esi,512
+	jl	.b1
 
-	;; 以下申请创建LDT所需要的内存
-	mov 	ecx,160		;允许安装20个LDT描述符
-	call 	sys_routine_seg_sel:allocate_memory
-	mov 	[es:esi+0x0c],ecx ;登记LDT基地址到TCB中
-	mov	word[es:esi+0x0a],0xffff ;登记LDT初始的界限到TCB中
-
-	;; 以下开始加载用户程序
+	;; 以下开始分配内存并加载用户程序
 	mov	eax,core_data_seg_sel
 	mov	ds,eax		;切换DS到内核数据段
 
@@ -583,33 +633,81 @@ load_relocate_program:
         call 	sys_routine_seg_sel:read_hard_disk_0
 
          ;以下判断整个程序有多大
-        mov eax,[core_buf]                 ;程序尺寸
-        mov ebx,eax
-        and ebx,0xfffffe00                 ;使之512字节对齐（能被512整除的数， 
-        add ebx,512                        ;低9位都为0 
-        test eax,0x000001ff                ;程序的大小正好是512的倍数吗? 
-        cmovnz eax,ebx                     ;不是。使用凑整的结果 
+        mov 	eax,[core_buf]                 ;程序尺寸
+        mov 	ebx,eax
+        and 	ebx,0xfffff000                 ;使之4KB对齐
+        add 	ebx,0x1000                     ;低9位都为0 
+        test 	eax,0x00000fff                ;程序的大小正好是4KB的倍数吗? 
+        cmovnz 	eax,ebx                     ;不是。使用凑整的结果 
       
-        mov ecx,eax                        ;实际需要申请的内存数量
-        call sys_routine_seg_sel:allocate_memory
-	mov	[es:esi+0x06],ecx 	;登记程序加载基地址到TCB中
+        mov 	ecx,eax                        ;实际需要申请的内存数量
+	shr	ecx,12			       ;程序占用的总4KB页数
 
-	mov ebx,ecx                        ;ebx -> 申请到的内存首地址
-        xor edx,edx
-        mov ecx,512
-        div ecx
-        mov ecx,eax                        ;总扇区数 
-      
-        mov eax,mem_0_4_gb_seg_sel         ;切换DS到0-4GB的段
-        mov ds,eax
+	mov	eax,mem_0_4_gb_seg_sel ;切换DS到9-4GB的段
+	mov	ds,eax
 
-        mov eax,[ebp+12*4]                        ;起始扇区号 
-.b1:
-	call sys_routine_seg_sel:read_hard_disk_0
-        inc eax
-        loop .b1                           ;循环读，直到读完整个用户程序
+	mov	eax,[ebp+12*4]	;起始扇区号
+	mov	esi,[ebp+11*4]	;从堆栈中取得TCB的基地址
+.b2:
+	mov	ebx,[es:esi+0x06] ;取得可用的线性地址
+	add	dword[es:esi+0x06],0x1000
+	call	sys_routine_seg_sel:allocate_inst_a_page
 
-	mov	edi,[es:esi+0x06]	;获得程序加载基地址
+	push	ecx
+	mov	ecx,8
+.b3:
+	call 	sys_routine_seg_sel:read_hard_disk_0
+	inc	eax
+	loop	.b3
+
+	pop	ecx
+	loop	.b2
+
+	;; 在内核地址空间内创建用户任务的TSS
+	mov	eax,core_data_seg_sel ;切换DS到内核数据段
+	mov 	ds,eax
+
+	mov	ebx,[core_next_laddr] ;用户任务的TSS必须在全局空间上分配
+	call	sys_routine_seg_sel:allocate_inst_a_page
+	add	dword[core_next_laddr],4096
+
+	mov	[es:esi+0x14],ebx ;在TCB中填写TSS的线性地址
+	mov	word[es:esi+0x12],103 ;在TCB中填写TSS的界限值
+
+	;; 在用户任务的局部地址空间内创建LDT
+	mov	ebx,[es:esi+0x06] ;从TCB中取得可用的线性地址
+	add	dword[es:esi+0x06],0x1000
+	call	sys_routine_seg_sel:allocate_inst_a_page
+	mov	[es:esi+0x0c],ebx ;填写LDT线性地址到TCB中
+
+	;; 建立程序代码段描述符
+	mov	eax,0x00000000
+	mov	ebx,0x000fffff
+	mov	ecx,0x00c0f800	;4KB粒度的代码段描述符，特权级3
+	call	sys_routine_seg_sel:make_seg_descriptor
+	mov	ebx,esi		;TCB的基地址
+	call	fill_descriptor_in_ldt
+	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
+
+	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS线性地址
+	mov	[es:ebx+76],cx	  ;填写TSS的CS域
+
+	
+	;; 建立程序数据段描述符
+	mov	eax,0x00000000
+	mov	ebx,0x000fffff
+	mov	ecx,0x00c0f200	;4KB粒度的代码段描述符，特权级3
+	call	sys_routine_seg_sel:make_seg_descriptor
+	mov	ebx,esi		;TCB的基地址
+	call	fill_descriptor_in_ldt
+	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
+
+	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS线性地址
+	mov	[es:ebx+84],cx	  ;填写TSS的CS域
+	
+	
+
+
         ;建立程序头部段描述符
         mov eax,edi                        ;程序头部起始线性地址
         mov ebx,[edi+0x04]                 ;段长度
