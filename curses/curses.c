@@ -70,19 +70,19 @@ int main()
       add_record();
       break;
     case 'c':
-      //count_cds();
+      count_cds();
       break;
     case 'f':
-      //find_cd();
+      find_cd();
       break;
     case 'l':
-      //list_tracks();
+      list_tracks();
       break;
     case 'r':
-      //remove_cd();
+      remove_cd();
       break;
     case 'u':
-      //update_cd();
+      update_cd();
       break;
     }
   }while(choice!='q');
@@ -269,7 +269,7 @@ void add_record()
   mvprintw(17,5,"%s",cd_entry);
   refresh();
 
-  mvoe(PROMPT_LINE,0);
+  move(PROMPT_LINE,0);
   if(get_confirm()){
     insert_title(cd_entry);
     strcpy(current_cd,cd_title);
@@ -279,12 +279,12 @@ void add_record()
 
 void count_cds()
 {
-  FILE *titles_fp,*stracks_fp;
+  FILE *titles_fp,*tracks_fp;
   char entry[MAX_STRING];
   int titles=0;
   int tracks=0;
 
-  titles_fp=fopen(titles_fp,"r");
+  titles_fp=fopen(title_file,"r");
   if(titles_fp){
     while(fgets(entry,MAX_ENTRY,titles_fp))
       titles++;
@@ -311,8 +311,8 @@ void find_cd()
   get_string(match);
 
   titles_fp=fopen(title_file,"r");
-  if(title_fp){
-    while(fgets(entry,MAX_ENTRY,title_fp)){
+  if(titles_fp){
+    while(fgets(entry,MAX_ENTRY,titles_fp)){
       catalog=entry;		/* skip past catalog number */
       if(found=strstr(catalog,",")){
 	*found=0;
@@ -353,6 +353,8 @@ void remove_tracks()
   cat_length=strlen(current_cat);
 
   tracks_fp=fopen(tracks_file,"r");
+  if(!tracks_fp)
+    return;
   temp_fp=fopen(temp_file,"w");
 
   while(fgets(entry,MAX_ENTRY,tracks_fp)){
@@ -363,6 +365,7 @@ void remove_tracks()
   fclose(temp_fp);
   unlink(tracks_file);
   rename(temp_file,tracks_file);
+
 }
 
 void remove_cd()
@@ -438,11 +441,15 @@ void list_tracks()
   if(!track_pad_ptr)
     return;
 
+  tracks_fp=fopen(tracks_file,"r");
+  if(!tracks_fp)
+    return;
+
   mvprintw(4,0,"CD Track Listing\n");
 
   while(fgets(entry,MAX_ENTRY,tracks_fp)){
     if(strncmp(current_cat,entry,cat_length)==0){
-      mvprintw(track_pad_ptr,lines_op++,0,"%s",entry+cat_length+1);
+      mvwprintw(track_pad_ptr,lines_op++,0,"%s",entry+cat_length+1);
     }
   }
   fclose(tracks_fp);
@@ -499,11 +506,11 @@ void update_cd()
 
   mvprintw(MESSAGE_LINE,0,"Enter a blank line to finish");
 
-  tracks_fp=fopen(tracks_fp,"a");
+  tracks_fp=fopen(tracks_file,"a");
 
   box_window_ptr=subwin(stdscr,BOXED_LINES+2,BOXED_ROWS+2,
 			BOX_LINE_POS-1,BOX_ROW_POS-1);
-  if(!box_row_pos)
+  if(!box_window_ptr)
     return;
 
   box(box_window_ptr,ACS_VLINE,ACS_HLINE);
@@ -517,7 +524,7 @@ void update_cd()
   touchwin(stdscr);
 
   do{
-    mvprintw(sub_window_ptr,screen_line++,BOX_ROW_POS+2,"Track %d:",track);
+    mvwprintw(sub_window_ptr,screen_line++,BOX_ROW_POS+2,"Track %d:",track);
     clrtoeol();
     refresh();
     wgetnstr(sub_window_ptr,track_name,MAX_STRING);
