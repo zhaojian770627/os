@@ -353,7 +353,7 @@ allocate_a_4k_page:
 ;;; ----------------------------------------------------------
 	;; 分配一个页，并安装在当前活动的层级分页结构中
 	;; 输入:EBX=页的线性地址
-alloc_inst_a_page:	
+allocate_inst_a_page:	
 	push	eax
 	push	ebx
 	push	esi
@@ -796,9 +796,9 @@ load_relocate_program:
 	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS的线性地址
 	mov	[es:ebx+96],cx	  ;填写TSS的LDT域
 
-	mov	word[es:ecx+0],0 ;反向链=0
+	mov	word[es:ebx+0],0 ;反向链=0
 
-	mov	dx,[es:ebx+0],0	;段长度（界限）
+	mov	dx,[es:ebx+0x12]	;段长度（界限）
 	mov	[es:ebx+102],dx	;填写TSS的I/O位图偏移域
 
 	mov	word[es:ebx+100],0 ;T=0
@@ -823,7 +823,6 @@ load_relocate_program:
 	call	sys_routine_seg_sel:create_copy_cur_pdir
 	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS的线性地址
 	mov	dword[es:ebx+28],eax ;填写TSS的CR3（PDBR）域
-
 	
 	pop	es		;恢复到调用此过程的es段
 	pop	ds		;恢复到调用此过程的ds段
@@ -846,6 +845,7 @@ append_to_tcb_link:
 	mov	es,eax
 
 	mov	dword[es:ecx+0x00],0 ;当前TCB指针域清零，以指示这是最后一个TCB
+
 	mov	eax,[tcb_chain]	     ;TCB表头指针
 	or	eax,eax		     ;链表为空?
 	jz	.notcb
@@ -864,6 +864,7 @@ append_to_tcb_link:
 	pop	ds
 	pop	edx
 	pop	eax
+
 	ret
 ;;; -------------------------------------------------------------
 start:
