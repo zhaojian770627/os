@@ -1,6 +1,3 @@
-#本章开始使用虚拟硬盘 虚拟硬盘采用固定100M VHD固定格式 用VirtualBOX创建，默认位置为 ~/imgs/org.vhd 
-#此虚拟硬盘每个磁道17个扇区，因为目前为止编写的程序都不超过17个扇区，所以采用直接写的方式，如果以后程序大了
-#在开发专用工具
 all:disk
 disk:mbr.bin core.bin c16.bin
 	cp ~/imgs/org.vhd disk.vhd

@@ -751,13 +751,13 @@ load_relocate_program:
 
         mov ecx,[es:0x0c]          ;U-SALT条目数
         add edi,[es:0x08]           ;U-SALT在4GB空间内的偏移
- .b4: 
+.b4: 
         push ecx
         push edi
       
         mov ecx,salt_items
         mov esi,salt
- .b5:
+.b5:
         push edi
         push esi
         push ecx
@@ -771,7 +771,7 @@ load_relocate_program:
 	or  ax,0000000000000011B ;用用户程序自己的特权级使用调用门 RPL=3
 	
 	mov [es:edi-252],ax                ;回填调用门选择子
- .b6:
+.b6:
       
         pop ecx
         pop esi
@@ -981,7 +981,7 @@ flush:
 	mov	ss,eax
 
 	mov	eax,core_data_seg_sel
-	mov	es,eax
+	mov	ds,eax
 
 	mov	ebx,message_1
 	call	sys_routine_seg_sel:put_string
