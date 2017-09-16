@@ -353,7 +353,7 @@ allocate_a_4k_page:
 ;;; ----------------------------------------------------------
 	;; 分配一个页，并安装在当前活动的层级分页结构中
 	;; 输入:EBX=页的线性地址
-allocate_inst_a_page:	
+alloc_inst_a_page:	
 	push	eax
 	push	ebx
 	push	esi
@@ -387,7 +387,7 @@ allocate_inst_a_page:
 	shr	ebx,10		;相当于右移12位，再乘以4
 	or	esi,ebx		;页表项的线性地址
 	call	allocate_a_4k_page ;分配一个页，这才是要安装的页
-	or	ebx,0x00000007
+	or	eax,0x00000007
 	mov	[esi],eax
 
 	pop	ds
@@ -619,7 +619,7 @@ load_relocate_program:
 .b2:
 	mov	ebx,[es:esi+0x06] ;取得可用的线性地址
 	add	dword[es:esi+0x06],0x1000
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 
 	push	ecx
 	mov	ecx,8
@@ -636,7 +636,7 @@ load_relocate_program:
 	mov 	ds,eax
 
 	mov	ebx,[core_next_laddr] ;用户任务的TSS必须在全局空间上分配
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 	add	dword[core_next_laddr],4096
 
 	mov	[es:esi+0x14],ebx ;在TCB中填写TSS的线性地址
@@ -645,7 +645,7 @@ load_relocate_program:
 	;; 在用户任务的局部地址空间内创建LDT
 	mov	ebx,[es:esi+0x06] ;从TCB中取得可用的线性地址
 	add	dword[es:esi+0x06],0x1000
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 	mov	[es:esi+0x0c],ebx ;填写LDT线性地址到TCB中
 
 	;; 建立程序代码段描述符
@@ -679,7 +679,7 @@ load_relocate_program:
 	;; 将数据段作为用户任务的3特权级固有堆栈
 	mov	ebx,[es:esi+0x06] ;从TCB中取得可用的线性地址
 	add	dword[es:esi+0x06],0x1000
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 
 	mov	ebx,[es:esi+0x14]  ;从TCB中获取TSS线性地址
 	mov	[es:ebx+80],cx	  ;填写TSS的SS域
@@ -689,7 +689,7 @@ load_relocate_program:
 	;; 在用户任务的局部地址空间内创建0特权级堆栈
 	mov	ebx,[es:esi+0x06] ;从TCB中取得可用的线性地址
 	add	dword[es:esi+0x06],0x1000
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
@@ -707,7 +707,7 @@ load_relocate_program:
 	;; 在用户任务的局部地址空间内创建1特权级堆栈
 	mov	ebx,[es:esi+0x06] ;从TCB中取得可用的线性地址
 	add	dword[es:esi+0x06],0x1000
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
@@ -725,7 +725,7 @@ load_relocate_program:
 	;; 在用户任务的局部地址空间内创建2特权级堆栈
 	mov	ebx,[es:esi+0x06] ;从TCB中取得可用的线性地址
 	add	dword[es:esi+0x06],0x1000
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
@@ -1010,7 +1010,7 @@ flush:
 
 	;; 在程序管理器的TSS分配内存空间
 	mov	ebx,[core_next_laddr]
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 	add 	dword[core_next_laddr],4096
 
 	;; 在程序管理器的TSS中设置必要的项目
@@ -1040,7 +1040,7 @@ flush:
 
 	;; 创建用户任务的任务控制块
 	mov	ebx,[core_next_laddr]
-	call	sys_routine_seg_sel:allocate_inst_a_page
+	call	sys_routine_seg_sel:alloc_inst_a_page
 	add	dword[core_next_laddr],4096
 
 	mov	dword[es:ebx+0x06],0 ;用户任务局部空间的分配从0开始
