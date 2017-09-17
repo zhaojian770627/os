@@ -750,7 +750,7 @@ load_relocate_program:
         cld
 
         mov ecx,[es:0x0c]          ;U-SALT条目数
-        add edi,[es:0x08]           ;U-SALT在4GB空间内的偏移
+        mov edi,[es:0x08]           ;U-SALT在4GB空间内的偏移
 .b4: 
         push ecx
         push edi
@@ -777,7 +777,7 @@ load_relocate_program:
         pop esi
         add esi,salt_item_len
         pop edi                            ;从头比较 
-        loop .b4
+        loop .b5
      
         pop edi
         add edi,256
@@ -798,7 +798,7 @@ load_relocate_program:
 
 	mov	word[es:ebx+0],0 ;反向链=0
 
-	mov	dx,[es:ebx+0x12]	;段长度（界限）
+	mov	dx,[es:esi+0x12]	;段长度（界限）
 	mov	[es:ebx+102],dx	;填写TSS的I/O位图偏移域
 
 	mov	word[es:ebx+100],0 ;T=0
