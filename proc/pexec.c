@@ -4,7 +4,7 @@
 
 int main(){
   printf("Running ps with execlp\n");
-  execlp("ps","ps","-ax",0);
+  execlp("ps","ps","-ax",NULL);
   printf("Done.\n");
   exit(0);
 }
