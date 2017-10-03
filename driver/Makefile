@@ -1,3 +1,6 @@
+#安装模块 sudo insmod hello.ko
+#卸载模块 sudo rmmod hello
+#查看信息 dmesg|tail -n1
 obj-m := hello.o
 
 all: 
