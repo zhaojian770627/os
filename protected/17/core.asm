@@ -842,15 +842,92 @@ append_to_tcb_link:
 	ret
 ;;; -------------------------------------------------------------
 start:
-        mov 	ecx,core_data_seg_sel  ;使ds指向核心数据段 
-        mov 	ds,ecx
+	;; 创建中断描述表IDT
+	;; 在此之前，禁止调用put_string过程，以及任何含有sti指令的过程
 
-	mov	ecx,mem_0_4_gb_seg_sel ;令ES指向4GB数据段
-	mov	es,ecx
+	;; 前20个向量是处理器异常使用的
+	mov	eax,general_exception_handler ;门代码在段内偏移地址
+	mov	bx,flat_4gb_data_seg_sel      ;门代码所在段的选择子
+	mov	cx,0x8e00		      ;32位中断门，0特权级
+	call	flat_4gb_data_seg_sel:make_seg_descriptor
+
+	mov	ebx,idt_linear_address ;中断描述符表的线性地址
+	xor	esi,esi
+.idt0:
+	mov	[ebx+esi*8],eax
+	mov	[ebx+esi*8+4],edx 
+	inc	esi
+	cmp	esi,19
+	jle	.idt0	;安装前20个异常中断处理过程
+
+	;; 其余为保留或硬件使用的中断向量
+	mov	eax,general_interrupt_handler ;门代码在段内偏移地址
+	mov	bx,flat_4gb_data_seg_sel      ;门代码所在段的选择子
+	mov	cx,0x8e00		      ;32位中断门，0特权级
+	call	flat_4gb_data_seg_sel:make_seg_descriptor
+
+	mov	ebx,idt_linear_address ;中断描述符表的线性地址
+.idt1:
+	mov	[ebx+esi*8],eax
+	mov	[ebx+esi*8+4],edx
+	inc	esi
+	cmp	esi,255		;安装普通的中断处理过程
+	jle	.idt1
+
+	;; 设置实时时钟中断处理过程
+	mov	eax,rtm_0x70_interrupt_handle ;门代码在段内偏移地址
+	mov	bx,flat_4gb_data_seg_sel      ;门代码所在段的选择子
+	mov	cx,0x8e00		      ;32位中断门，0特权级
+	call	flat_4gb_data_seg_sel:make_seg_descriptor
+
+	mov	ebx,idt_linear_address ;中断描述符表的线性地址
+	mov	[ebx+0x70*8],eax
+	mov	[ebx+0x70*8+4],edx
+
+	;; 准备开放中断
+	mov	word[pidt],256*8-1 ;IDT的界限
+	mov	dword[pidt+2],idt_linear_address
+	lidt 	[pidt]		;加载中断描述符表寄存器IDTR
+
+	;; 设置8259A中断寄存器
+	mov	al,0x11
+	out	0x20,al		;ICW1:边沿触发/级联方式
+	mov	al,0x20
+	out	0x21,al		;ICW2:起始中断向量
+	mov	al,0x04
+	out	0x21,al		;ICW3:从片级联到IR2
+	mov	al,0x01
+	out	0x21,al		;ICW4:非总线缓冲，全嵌套，正常EOI
+
+	mov 	al,0x11
+        out 	0xa0,al                        ;ICW1：边沿触发/级联方式
+        mov 	al,0x70
+        out 	0xa1,al                        ;ICW2:起始中断向量
+        mov 	al,0x04
+        out 	0xa1,al                        ;ICW3:从片级联到IR2
+        mov 	al,0x01
+        out 	0xa1,al                        ;ICW4:非总线缓冲，全嵌套，正常EOI
+
+	;设置和时钟中断相关的硬件 
+         mov al,0x0b                        ;RTC寄存器B
+         or al,0x80                         ;阻断NMI
+         out 0x70,al
+         mov al,0x12                        ;设置寄存器B，禁止周期性中断，开放更
+         out 0x71,al                        ;新结束后中断，BCD码，24小时制
+
+         in al,0xa1                         ;读8259从片的IMR寄存器
+         and al,0xfe                        ;清除bit 0(此位连接RTC)
+         out 0xa1,al                        ;写回此寄存器
+
+         mov al,0x0c
+         out 0x70,al
+         in al,0x71                         ;读RTC寄存器C，复位未决的中断状态
+
+         sti                                ;开放硬件中断
+
+	mov	ebx,message_0
+	call	flat_4gb_data_seg_sel:put_string
 	
-        mov 	ebx,message_0
-        call 	sys_routine_seg_sel:put_string
-                                         
          ;显示处理器品牌信息 
          mov eax,0x80000002
          cpuid
@@ -880,86 +957,6 @@ start:
          mov ebx,cpu_brnd1
          call sys_routine_seg_sel:put_string
 
-	;; 准备打开分页机制
-
-	;; 创建系统内核的页目录表PDT
-	;; 页目录表清零
-	mov	ecx,1024	;1024个目录项
-	mov	ebx,0x00020000	;页目录的物理地址
-	xor	esi,esi
-.b1:
-	mov	dword[es:ebx+esi],0x00000000
-	add	esi,4
-	loop	.b1
-
-	;; 在页目录内创建指向页目录自己的目录项
-	mov	dword[es:ebx+4092],0x00020003
-
-	;; 在页目录内创建与线性地址0x00000000对应的目录项
-	mov	dword[es:ebx+0],0x00021003 ;写入目录项（页表的物理地址和属性）
-
-	;; 创建与上面那个目录项相对应的页表，初始化页表项
-	mov	ebx,0x00021000	;页表的物理地址
-	xor	eax,eax
-	xor	esi,esi
-.b2:
-	mov	edx,eax
-	or	edx,0x00000003
-	mov	[es:ebx+esi*4],edx ;登记页的物理地址
-	add	eax,0x1000	   ;下一个相邻页的物理地址
-	inc	esi
-	cmp	esi,256		;仅低端1MB内存对应的页才是有效的
-	jl	.b2
-
-.b3:				;其余的页表项置为无效
-	mov	dword[es:ebx+esi*4],0x00000000
-	inc	esi
-	cmp	esi,1024
-	jl	.b3
-
-	;; 令CR3寄存器指向页目录，并正式开启功能
-	mov	eax,0x00020000	;PCD=PWT=0
-	mov	cr3,eax
-
-	mov	eax,cr0		
-	or	eax,0x80000000
-	mov	cr0,eax		;开启分页机制
-
-	;; 在页目录内创建与线性地址0x80000000对应的目录项
-	mov	ebx,0xfffff000	;页目录自己的线性地址
-	mov	esi,0x80000000	;映射的起始地址
-	shr	esi,22		;线性地址的高10位是目录索引
-	shl	esi,2		;
-	;; 写入目录项（页表的物理地址和属性
-	;; 目标单元的线性地址为0xFFFFF200
-	mov	dword[es:ebx+esi],0x00021003
-
-	;; 将GDT中的段描述符映射到线性地址0x80000000
-	sgdt	[pgdt]
-
-	mov	ebx,[pgdt+2]
-
-	or	dword[es:ebx+0x10+4],0x80000000
-	or	dword[es:ebx+0x18+4],0x80000000
-	or	dword[es:ebx+0x20+4],0x80000000
-	or	dword[es:ebx+0x28+4],0x80000000
-	or	dword[es:ebx+0x30+4],0x80000000
-	or	dword[es:ebx+0x38+4],0x80000000
-	
-	add	dword[pgdt+2],0x80000000 ;GDTR也用的是线性地址
-	lgdt	[pgdt]
-	jmp 	core_code_seg_sel:flush ;刷新段寄存器CS，启用高端线性地址
-
-flush:
-	mov	eax,core_stack_seg_sel
-	mov	ss,eax
-
-	mov	eax,core_data_seg_sel
-	mov	ds,eax
-
-	mov	ebx,message_1
-	call	sys_routine_seg_sel:put_string
-
 	;; 以下开始安装为整个系统服务的调用门。特权级之间的控制转移必须使用门
 	mov	edi,salt	;C-SALT表的起始地址
 	mov	ecx,salt_items	;C-SALT表的条目数量
@@ -970,41 +967,42 @@ flush:
 	;; 特权级3的调用门（3以上的特权级才允许访问)
 	;; 0个参数（因为用寄存器传递参数，而没有用到栈）
 	mov	cx,1_11_0_1100_000_00000B
-	call	sys_routine_seg_sel:make_gate_descriptor
-	call	sys_routine_seg_sel:set_up_gdt_descriptor
+	call	flat_4gb_data_seg_sel:make_gate_descriptor
+	call	flat_4gb_data_seg_sel:set_up_gdt_descriptor
 	mov	[edi+260],cx	;将返回的门描述符选择子回填
 	add	edi,salt_item_len ;指向下一个C-SALT条目
 	pop	ecx
 	loop	.b4
 
 	;; 对门进行测试
-	mov	ebx,message_2
+	mov	ebx,message_1
 	call 	far[salt_1+256]	;通过门显示信息（偏移量将忽略）
 
+	;; 初始化创建程序管理器任务的任务控制块TCB
+	mov	word[core_tcb+0x04],0xffff ;任务状态:忙碌
+	mov	dword[core_tcb+0x06],0x80100000 ;内核虚拟空间的分配从这里开始
+	mov	word[core_tcb+0x0a],0xffff	;登记LDT初始的界限到TCB中（未使用）
+	mov	ecx,core_tcb
+	call	append_to_tcb_link ;将此TCB添加到TCB链中
 
 	;; 在程序管理器的TSS分配内存空间
-	mov	ebx,[core_next_laddr]
-	call	sys_routine_seg_sel:alloc_inst_a_page
-	add 	dword[core_next_laddr],4096
+	alloc_core_linear	;宏：在内核的虚拟地址空间分配内存
 
 	;; 在程序管理器的TSS中设置必要的项目
 	mov	word[es:ebx+0],0 ;反向链=0
-
 	mov	eax,cr3
 	mov	dword[es:ebx+28],eax ;登记CR3(PDBR)
-
 	mov	word[es:ebx+96],0 ;没有LDT。处理器允许没有LDT的任务
 	mov	word[es:ebx+100],0 ;T=0
 	mov	word[es:ebx+102],103 ;没有I/O位图。0特权级事实上不需要
-	
 
-	;; 创建TSS描述符，并安装到GDT中
+	;; 创建程序管理器TSS描述符，并安装到GDT中
 	mov	eax,ebx		;TSS的起始线性地址
 	mov	ebx,103		;段长度(界限)
 	mov	ecx,0x00408900	;TSS描述符，特权级0
-	call	sys_routine_seg_sel:make_seg_descriptor
-	call	sys_routine_seg_sel:set_up_gdt_descriptor
-	mov	[prgman_man_tss+0x04],cx ;保存程序管理器的TSS描述符选择子
+	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_data_seg_sel:set_up_gdt_descriptor
+	mov	[core_tcb+0x18],cx ;保存程序管理器的TSS描述符选择子
 	
 	;; 任务寄存器TR中的内容是任务存在的标志，该内容也决定了当前任务是谁。
 	;; 下面的指令为当前正在执行的0特权级任务“程序管理器”后补手续（TSS)
@@ -1013,9 +1011,7 @@ flush:
 	;; 现在可认为“任务管理器”任务正执行中
 
 	;; 创建用户任务的任务控制块
-	mov	ebx,[core_next_laddr]
-	call	sys_routine_seg_sel:alloc_inst_a_page
-	add	dword[core_next_laddr],4096
+	alloc_core_linear
 
 	mov	dword[es:ebx+0x06],0 ;用户任务局部空间的分配从0开始
 	mov	word[es:ebx+0x0a],0xffff ;登记LDT初始的界限到TCB中
