@@ -14,7 +14,7 @@
 		mov	ebx,[esi+0x06]
 		add 	dword[esi+0x06],0x1000
 		call	flat_4gb_data_seg_sel:alloc_inst_a_page
-	%endmacr
+	%endmacro
 ;-------------------------------------------------------------------
 SECTION core vstart=0x80040000
          ;以下是系统核心的头部，用于加载核心程序 
@@ -704,7 +704,7 @@ load_relocate_program:
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
 	mov	ecx,0x00c0b200	;4KB粒度的堆栈段描述符，特权级1
-	call	sys_routine_seg_sel:make_seg_descriptor
+	call	flat_4gb_data_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call 	fill_descriptor_in_ldt
 	or	cx,0000_0000_0000_0001B ;设置选择子的特权级为1
@@ -951,11 +951,11 @@ start:
          mov [cpu_brand + 0x2c],edx
 
          mov ebx,cpu_brnd0
-         call sys_routine_seg_sel:put_string
+         call flat_4gb_data_seg_sel:put_string
          mov ebx,cpu_brand
-         call sys_routine_seg_sel:put_string
+         call flat_4gb_data_seg_sel:put_string
          mov ebx,cpu_brnd1
-         call sys_routine_seg_sel:put_string
+         call flat_4gb_data_seg_sel:put_string
 
 	;; 以下开始安装为整个系统服务的调用门。特权级之间的控制转移必须使用门
 	mov	edi,salt	;C-SALT表的起始地址
@@ -1013,28 +1013,39 @@ start:
 	;; 创建用户任务的任务控制块
 	alloc_core_linear
 
-	mov	dword[es:ebx+0x06],0 ;用户任务局部空间的分配从0开始
-	mov	word[es:ebx+0x0a],0xffff ;登记LDT初始的界限到TCB中
+	mov	word[ebx+0x04],0  ;任务状态:空闲
+	mov	dword[ebx+0x06],0 ;用户任务局部空间的分配从0开始
+	mov	word[ebx+0x0a],0xffff ;登记LDT初始的界限到TCB中
 	mov	ecx,ebx
-	call	append_to_tcb_link ;将此TCG添加到TCB链中
 
 	push	dword 50	;用户程序位于逻辑50扇区
-	push	ecx		;压入任务控制块起始线性地址
-
+	push	ebx		;压入任务控制块起始线性地址
 	call	load_relocate_program
+	mov	ecx,ebx
+	call	append_to_tcb_link ;将此TCB添加到TCB链中
 
-	mov	ebx,message_4
-	call	sys_routine_seg_sel:put_string
+	;; 创建用户任务的任务控制链
+	alloc_core_linear
 
-	call	far[es:ecx+0x14] ;执行任务切换
+	mov	word[ebx+0x04],0 ;任务状态:空闲
+	mov	dword[ebx+0x06],0 ;0xffff;用户任务局部空间的分配从0开始
+	mov	word[ebx+0x0a],0xffff ;登记LDT初始的界限到TCB中
 
-	mov	ebx,message_5
-	call	sys_routine_seg_sel:put_string
-	
-	hlt
+	push	dword	100	;用户程序位于逻辑100扇区
+	push	ebx		;压入任务控制块起始线性地址
+	call	load_relocate_program
+	mov	ecx,ebx
+	call	append_to_tcb_link ;将此TCB添加到TCB链中
+.core:
+	mov	ebx,core_msg0
+	call	flat_4gb_data_seg_sel:put_string
+
+	;; 这里可以编写回收已终止任务内存的代码
+
+	jmp	.core
 	
 core_code_end:
-;===============================================================================
+;==================================================================
 SECTION core_trail
-;-------------------------------------------------------------------------------
+;-------------------------------------------------------------------
 core_end:

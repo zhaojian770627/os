@@ -1,9 +1,9 @@
 all:disk
-disk:mbr.bin 
-#core.bin c16.bin
+disk:mbr.bin core.bin 
+#c16.bin
 	cp ~/imgs/org.vhd disk.vhd
 	dd if=mbr.bin of=disk.vhd  bs=512 count=1 conv=notrunc
-#	dd if=core.bin of=disk.vhd  bs=512 seek=1 conv=notrunc
+	dd if=core.bin of=disk.vhd  bs=512 seek=1 conv=notrunc
 #	dd if=c16.bin of=disk.vhd  bs=512 seek=50 conv=notrunc
 #	cp disk.vhd ~/imgs
 mbr.bin:
