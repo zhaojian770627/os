@@ -13,7 +13,9 @@
 #include <stdlib.h>
 
 /* Miscellaneous constants */
-#define	MAXLINE		4096	/* max text line length */
+#define	MAXLINE		4096	/* max text line length *
 
+/* Following shortens all the typecasts of pointer arguments: */
+#define	SA	struct sockaddr
 
 #endif	/* __unp_h */
