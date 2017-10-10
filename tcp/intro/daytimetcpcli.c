@@ -1,5 +1,8 @@
 #include "../lib/unp.h"
 
+/* 
+ ./daytimetcpcli 132.163.4.102
+ */
 int 
 main(int argc,char **argv)
 {
