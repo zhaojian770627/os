@@ -847,9 +847,9 @@ start:
 
 	;; 前20个向量是处理器异常使用的
 	mov	eax,general_exception_handler ;门代码在段内偏移地址
-	mov	bx,flat_4gb_data_seg_sel      ;门代码所在段的选择子
+	mov	bx,flat_4gb_code_seg_sel      ;门代码所在段的选择子
 	mov	cx,0x8e00		      ;32位中断门，0特权级
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 
 	mov	ebx,idt_linear_address ;中断描述符表的线性地址
 	xor	esi,esi
@@ -862,9 +862,9 @@ start:
 
 	;; 其余为保留或硬件使用的中断向量
 	mov	eax,general_interrupt_handler ;门代码在段内偏移地址
-	mov	bx,flat_4gb_data_seg_sel      ;门代码所在段的选择子
+	mov	bx,flat_4gb_code_seg_sel      ;门代码所在段的选择子
 	mov	cx,0x8e00		      ;32位中断门，0特权级
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 
 	mov	ebx,idt_linear_address ;中断描述符表的线性地址
 .idt1:
@@ -876,9 +876,9 @@ start:
 
 	;; 设置实时时钟中断处理过程
 	mov	eax,rtm_0x70_interrupt_handle ;门代码在段内偏移地址
-	mov	bx,flat_4gb_data_seg_sel      ;门代码所在段的选择子
+	mov	bx,flat_4gb_code_seg_sel      ;门代码所在段的选择子
 	mov	cx,0x8e00		      ;32位中断门，0特权级
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 
 	mov	ebx,idt_linear_address ;中断描述符表的线性地址
 	mov	[ebx+0x70*8],eax
