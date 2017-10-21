@@ -818,9 +818,9 @@ append_to_tcb_link:
 
 	cli
 	push	eax
-	push	edx
+	push	ebx
 
-	mov	eax,[tcb_chain]	     ;TCB表头指针
+	mov	eax,tcb_chain	     ;TCB表头指针
 .b0:				     ;EAX=链表头或当前TCB线性地址
 	mov	ebx,[eax]	     ;EBX=下一个TCB线性地址
 	or	ebx,ebx
@@ -835,9 +835,6 @@ append_to_tcb_link:
 	pop	eax
 
 	sti
-
-	pop	ebx
-	pop	eax
 
 	ret
 ;;; -------------------------------------------------------------
@@ -1016,7 +1013,6 @@ start:
 	mov	word[ebx+0x04],0  ;任务状态:空闲
 	mov	dword[ebx+0x06],0 ;用户任务局部空间的分配从0开始
 	mov	word[ebx+0x0a],0xffff ;登记LDT初始的界限到TCB中
-	mov	ecx,ebx
 
 	push	dword 50	;用户程序位于逻辑50扇区
 	push	ebx		;压入任务控制块起始线性地址
