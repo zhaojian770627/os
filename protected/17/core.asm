@@ -7,13 +7,13 @@
 	%macro 	alloc_core_linear 0 ;在内核空间中分配虚拟内存
 		mov	ebx,[core_tcb+0x06]
 		add 	dword[core_tcb+0x06],0x1000
-		call	flat_4gb_data_seg_sel:alloc_inst_a_page
+		call	flat_4gb_code_seg_sel:alloc_inst_a_page
 	%endmacro
 ;;; ----------------------------------------------------------------
 	%macro 	alloc_user_linear 0 ;在任务空间中分配虚拟内存
 		mov	ebx,[esi+0x06]
 		add 	dword[esi+0x06],0x1000
-		call	flat_4gb_data_seg_sel:alloc_inst_a_page
+		call	flat_4gb_code_seg_sel:alloc_inst_a_page
 	%endmacro
 ;-------------------------------------------------------------------
 SECTION core vstart=0x80040000
@@ -308,7 +308,7 @@ allocate_a_4k_page:
 	jl	.b1
 
 	mov	ebx,message_3
-	call	flat_4gb_data_seg_sel:put_string
+	call	flat_4gb_code_seg_sel:put_string
 	hlt			;没有可以分配的页，停机
 
 .b2:
@@ -403,7 +403,7 @@ general_interrupt_handler:	;通用的中断处理过程
 ;;; --------------------------------------------------------------
 general_exception_handler:	;通用的异常处理过程
 	mov	ebx,excep_msg
-	call	flat_4gb_data_seg_sel:put_string
+	call	flat_4gb_code_seg_sel:put_string
 
 	hlt
 ;;; ------------------------------------------------------------
@@ -504,22 +504,22 @@ terminate_current_task:
          salt_1           db  '@PrintString'
                      times 256-($-salt_1) db 0
                           dd  put_string
-                          dw  flat_4gb_data_seg_sel
+                          dw  flat_4gb_code_seg_sel
 
          salt_2           db  '@ReadDiskData'
                      times 256-($-salt_2) db 0
                           dd  read_hard_disk_0
-                          dw  flat_4gb_data_seg_sel
+                          dw  flat_4gb_code_seg_sel
 
          salt_3           db  '@PrintDwordAsHexString'
                      times 256-($-salt_3) db 0
                           dd  put_hex_dword
-                          dw  flat_4gb_data_seg_sel
+                          dw  flat_4gb_code_seg_sel
 
          salt_4           db  '@TerminateProgram'
                      times 256-($-salt_4) db 0
                           dd  terminate_current_task
-                          dw  flat_4gb_data_seg_sel
+                          dw  flat_4gb_code_seg_sel
 
          salt_item_len   equ $-salt_4
          salt_items      equ ($-salt)/salt_item_len
@@ -606,7 +606,7 @@ load_relocate_program:
 	;; 以下开始分配内存并加载用户程序
 	mov	eax,[ebp+40]	;从堆栈中取出用户程序起始扇区号
 	mov	ebx,core_buf	;读取程序头部数据
-        call 	flat_4gb_data_seg_sel:read_hard_disk_0
+        call 	flat_4gb_code_seg_sel:read_hard_disk_0
 
          ;以下判断整个程序有多大
         mov 	eax,[core_buf]                 ;程序尺寸
@@ -627,7 +627,7 @@ load_relocate_program:
 	push	ecx
 	mov	ecx,8
 .b3:
-	call 	flat_4gb_data_seg_sel:read_hard_disk_0
+	call 	flat_4gb_code_seg_sel:read_hard_disk_0
 	inc	eax
 	loop	.b3
 
@@ -651,7 +651,7 @@ load_relocate_program:
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
 	mov	ecx,0x00c0f800	;4KB粒度的代码段描述符，特权级3
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
 	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
@@ -663,7 +663,7 @@ load_relocate_program:
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
 	mov	ecx,0x00c0f200	;4KB粒度的代码段描述符，特权级3
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
 	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
@@ -688,7 +688,7 @@ load_relocate_program:
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
 	mov	ecx,0x00c09200	;4KB粒度的堆栈段描述符，特权级0
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call	fill_descriptor_in_ldt
 	or	cx,0000_0000_0000_0000B ;设置选择子的特权级为0
@@ -704,7 +704,7 @@ load_relocate_program:
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
 	mov	ecx,0x00c0b200	;4KB粒度的堆栈段描述符，特权级1
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call 	fill_descriptor_in_ldt
 	or	cx,0000_0000_0000_0001B ;设置选择子的特权级为1
@@ -720,7 +720,7 @@ load_relocate_program:
 	mov	eax,0x00000000
 	mov	ebx,0x000fffff
 	mov	ecx,0x00c0d200	;4KB粒度的堆栈段描述符，特权级2
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
 	mov	ebx,esi		;TCB的基地址
 	call 	fill_descriptor_in_ldt
 	or	cx,0000_0000_0000_0010B ;设置选择子的特权级为1
@@ -773,8 +773,8 @@ load_relocate_program:
 	mov	eax,[esi+0x0c] 	;LDT的起始线性地址
 	movzx	ebx,word[esi+0x0a]	      ;LDT段界限
 	mov	ecx,0x00408200		      ;LDT描述符，特权级0
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
-	call	flat_4gb_data_seg_sel:set_up_gdt_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:set_up_gdt_descriptor
 	mov	[es:esi+0x10],cx	 	;登记LDT选择子到TCB中
 
 	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS的线性地址
@@ -798,13 +798,13 @@ load_relocate_program:
 	mov	eax,[esi+0x14] ;从TCB中获取TSS的起始线性地址
 	movzx	ebx,word[esi+0x12] ;段长度
 	mov	ecx,0x00408900	      ;TSS描述符，特权级0
-	call 	flat_4gb_data_seg_sel:make_seg_descriptor
-	call	flat_4gb_data_seg_sel:set_up_gdt_descriptor
+	call 	flat_4gb_code_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:set_up_gdt_descriptor
 	mov	[es:esi+0x18],cx ;登记TSS选择子到TCB
 
 	;; 创建用户任务的页目录
 	;; 注意！页的分配和使用是由页位图决定的，可以不占用线性地址空间
-	call	flat_4gb_data_seg_sel:create_copy_cur_pdir
+	call	flat_4gb_code_seg_sel:create_copy_cur_pdir
 	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS的线性地址
 	mov	dword[es:ebx+28],eax ;填写TSS的CR3（PDBR）域
 	
@@ -926,7 +926,7 @@ start:
          sti                                ;开放硬件中断
 
 	mov	ebx,message_0
-	call	flat_4gb_data_seg_sel:put_string
+	call	flat_4gb_code_seg_sel:put_string
 	
          ;显示处理器品牌信息 
          mov eax,0x80000002
@@ -951,11 +951,11 @@ start:
          mov [cpu_brand + 0x2c],edx
 
          mov ebx,cpu_brnd0
-         call flat_4gb_data_seg_sel:put_string
+         call flat_4gb_code_seg_sel:put_string
          mov ebx,cpu_brand
-         call flat_4gb_data_seg_sel:put_string
+         call flat_4gb_code_seg_sel:put_string
          mov ebx,cpu_brnd1
-         call flat_4gb_data_seg_sel:put_string
+         call flat_4gb_code_seg_sel:put_string
 
 	;; 以下开始安装为整个系统服务的调用门。特权级之间的控制转移必须使用门
 	mov	edi,salt	;C-SALT表的起始地址
@@ -967,8 +967,8 @@ start:
 	;; 特权级3的调用门（3以上的特权级才允许访问)
 	;; 0个参数（因为用寄存器传递参数，而没有用到栈）
 	mov	cx,1_11_0_1100_000_00000B
-	call	flat_4gb_data_seg_sel:make_gate_descriptor
-	call	flat_4gb_data_seg_sel:set_up_gdt_descriptor
+	call	flat_4gb_code_seg_sel:make_gate_descriptor
+	call	flat_4gb_code_seg_sel:set_up_gdt_descriptor
 	mov	[edi+260],cx	;将返回的门描述符选择子回填
 	add	edi,salt_item_len ;指向下一个C-SALT条目
 	pop	ecx
@@ -1000,8 +1000,8 @@ start:
 	mov	eax,ebx		;TSS的起始线性地址
 	mov	ebx,103		;段长度(界限)
 	mov	ecx,0x00408900	;TSS描述符，特权级0
-	call	flat_4gb_data_seg_sel:make_seg_descriptor
-	call	flat_4gb_data_seg_sel:set_up_gdt_descriptor
+	call	flat_4gb_code_seg_sel:make_seg_descriptor
+	call	flat_4gb_code_seg_sel:set_up_gdt_descriptor
 	mov	[core_tcb+0x18],cx ;保存程序管理器的TSS描述符选择子
 	
 	;; 任务寄存器TR中的内容是任务存在的标志，该内容也决定了当前任务是谁。
@@ -1038,7 +1038,7 @@ start:
 	call	append_to_tcb_link ;将此TCB添加到TCB链中
 .core:
 	mov	ebx,core_msg0
-	call	flat_4gb_data_seg_sel:put_string
+	call	flat_4gb_code_seg_sel:put_string
 
 	;; 这里可以编写回收已终止任务内存的代码
 
