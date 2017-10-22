@@ -140,7 +140,7 @@ read_hard_disk_0:                           ;从硬盘读取一个逻辑扇区
       
         push 	eax
          
-        mov 	dx,0x1f2
+	mov 	dx,0x1f2
         mov	al,1
         out 	dx,al                          ;读取的扇区数
 
@@ -537,7 +537,7 @@ terminate_current_task:
 	
         bin_hex          db '0123456789ABCDEF'
                                             ;put_hex_dword子过程用的查找表 
-         core_buf   times 2048 db 0         ;内核用的缓冲区
+         core_buf   times 512 db 0         ;内核用的缓冲区
 
          cpu_brnd0        db 0x0d,0x0a,'  ',0
          cpu_brand  times 52 db 0
@@ -590,8 +590,8 @@ load_relocate_program:
 	pushad
 
 	mov	ebp,esp		;为访问通过堆栈传递的参数做准备
-	
-       	;; 清空当前页目录的前半部分（对应低2GB的局部地址空间）
+
+	;; 清空当前页目录的前半部分（对应低2GB的局部地址空间）
 	mov	ebx,0xfffff000
 	xor 	esi,esi
 .b1:
@@ -975,6 +975,7 @@ start:
 	mov	ebx,message_1
 	call 	far[salt_1+256]	;通过门显示信息（偏移量将忽略）
 
+	
 	;; 初始化创建程序管理器任务的任务控制块TCB
 	mov	word[core_tcb+0x04],0xffff ;任务状态:忙碌
 	mov	dword[core_tcb+0x06],0x80100000 ;内核虚拟空间的分配从这里开始
