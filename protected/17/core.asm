@@ -987,12 +987,12 @@ start:
 	alloc_core_linear	;宏：在内核的虚拟地址空间分配内存
 
 	;; 在程序管理器的TSS中设置必要的项目
-	mov	word[es:ebx+0],0 ;反向链=0
+	mov	word[ebx+0],0 ;反向链=0
 	mov	eax,cr3
-	mov	dword[es:ebx+28],eax ;登记CR3(PDBR)
-	mov	word[es:ebx+96],0 ;没有LDT。处理器允许没有LDT的任务
-	mov	word[es:ebx+100],0 ;T=0
-	mov	word[es:ebx+102],103 ;没有I/O位图。0特权级事实上不需要
+	mov	dword[ebx+28],eax ;登记CR3(PDBR)
+	mov	word[ebx+96],0 ;没有LDT。处理器允许没有LDT的任务
+	mov	word[ebx+100],0 ;T=0
+	mov	word[ebx+102],103 ;没有I/O位图。0特权级事实上不需要
 
 	;; 创建程序管理器TSS描述符，并安装到GDT中
 	mov	eax,ebx		;TSS的起始线性地址
