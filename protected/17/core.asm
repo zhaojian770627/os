@@ -657,7 +657,7 @@ load_relocate_program:
 	or	cx,0000_0000_0000_0011B ;设置选择子的特权级为3
 
 	mov	ebx,[esi+0x14] ;从TCB中获取TSS线性地址
-	mov	[es:ebx+76],cx	  ;填写TSS的CS域
+	mov	[ebx+76],cx	  ;填写TSS的CS域
 
 	;; 建立程序数据段描述符
 	mov	eax,0x00000000
@@ -733,8 +733,8 @@ load_relocate_program:
         ;重定位SALT
 	cld
 
-        mov ecx,[es:0x0c]          ;U-SALT条目数
-        mov edi,[es:0x08]           ;U-SALT在4GB空间内的偏移
+        mov ecx,[0x0c]          ;U-SALT条目数
+        mov edi,[0x08]           ;U-SALT在4GB空间内的偏移
 .b4: 
         push ecx
         push edi
@@ -754,7 +754,7 @@ load_relocate_program:
         mov ax,[esi+4]
 	or  ax,0000000000000011B ;用用户程序自己的特权级使用调用门 RPL=3
 	
-	mov [es:edi-252],ax                ;回填调用门选择子
+	mov [edi-252],ax                ;回填调用门选择子
 .b6:
       
         pop ecx
@@ -775,15 +775,15 @@ load_relocate_program:
 	mov	ecx,0x00408200		      ;LDT描述符，特权级0
 	call	flat_4gb_code_seg_sel:make_seg_descriptor
 	call	flat_4gb_code_seg_sel:set_up_gdt_descriptor
-	mov	[es:esi+0x10],cx	 	;登记LDT选择子到TCB中
+	mov	[esi+0x10],cx	 	;登记LDT选择子到TCB中
 
-	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS的线性地址
-	mov	[es:ebx+96],cx	  ;填写TSS的LDT域
+	mov	ebx,[esi+0x14] ;从TCB中获取TSS的线性地址
+	mov	[ebx+96],cx	  ;填写TSS的LDT域
 
 	mov	word[ebx+0],0 ;反向链=0
 
-	mov	dx,[es:esi+0x12]	;段长度（界限）
-	mov	[es:ebx+102],dx	;填写TSS的I/O位图偏移域
+	mov	dx,[esi+0x12]	;段长度（界限）
+	mov	[ebx+102],dx	;填写TSS的I/O位图偏移域
 
 	mov	word[ebx+100],0 ;T=0
 
@@ -800,13 +800,13 @@ load_relocate_program:
 	mov	ecx,0x00408900	      ;TSS描述符，特权级0
 	call 	flat_4gb_code_seg_sel:make_seg_descriptor
 	call	flat_4gb_code_seg_sel:set_up_gdt_descriptor
-	mov	[es:esi+0x18],cx ;登记TSS选择子到TCB
+	mov	[esi+0x18],cx ;登记TSS选择子到TCB
 
 	;; 创建用户任务的页目录
 	;; 注意！页的分配和使用是由页位图决定的，可以不占用线性地址空间
 	call	flat_4gb_code_seg_sel:create_copy_cur_pdir
-	mov	ebx,[es:esi+0x14] ;从TCB中获取TSS的线性地址
-	mov	dword[es:ebx+28],eax ;填写TSS的CR3（PDBR）域
+	mov	ebx,[esi+0x14] ;从TCB中获取TSS的线性地址
+	mov	dword[ebx+28],eax ;填写TSS的CR3（PDBR）域
 	
 	popad
 
