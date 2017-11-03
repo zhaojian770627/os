@@ -24,6 +24,7 @@
 /* Following shortens all the typecasts of pointer arguments: */
 #define	SA	struct sockaddr
 
+const char *Inet_ntop(int, const void *, char *, size_t);
 
 int	 Socket(int, int, int);
 void	 Bind(int, const SA *, socklen_t);
