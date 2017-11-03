@@ -9,6 +9,7 @@
 #include <time.h>
 
 #include <netinet/in.h>	/* sockaddr_in{} and other Internet defns */
+#include <arpa/inet.h>
 #include <errno.h>
 #include <stdio.h>
 #include <string.h>

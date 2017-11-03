@@ -2,7 +2,7 @@
  * Wrapper functions for our own library functions.
  * Most are included in the source file for the function itself.
  */
-
+/* 必须包含 arpa/inet */
 #include	"unp.h"
 
 const char *
