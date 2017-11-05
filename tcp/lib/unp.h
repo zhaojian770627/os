@@ -15,6 +15,11 @@
 #include <string.h>
 #include <stdlib.h>
 
+
+
+/* Define some port number that can be used for our examples */
+#define	SERV_PORT		 9877			/* TCP and UDP */
+
 /* Miscellaneous constants */
 #define	MAXLINE		4096	/* max text line length *
 
@@ -25,7 +30,10 @@
 /* Following shortens all the typecasts of pointer arguments: */
 #define	SA	struct sockaddr
 
+ssize_t	 writen(int, const void *, size_t);
+
 const char *Inet_ntop(int, const void *, char *, size_t);
+
 
 int	 Socket(int, int, int);
 void	 Bind(int, const SA *, socklen_t);
@@ -33,6 +41,8 @@ void	 Listen(int, int);
 int	 Accept(int, SA *, socklen_t *);
 void	 Write(int, void *, size_t);
 void	 Close(int);
+
+void	 Writen(int, void *, size_t);
 
 void	 err_dump(const char *, ...);
 void	 err_msg(const char *, ...);
