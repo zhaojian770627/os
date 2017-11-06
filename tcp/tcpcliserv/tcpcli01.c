@@ -18,7 +18,7 @@ main(int argc,char **argv)
 
   Connect(sockfd,(SA*)&servaddr,sizeof(servaddr));
 
-  //  str_cli(stdin,sockfd);
+  str_cli(stdin,sockfd);
 
   exit(0);
 }

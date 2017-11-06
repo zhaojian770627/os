@@ -30,7 +30,12 @@
 /* Following shortens all the typecasts of pointer arguments: */
 #define	SA	struct sockaddr
 
+ssize_t	 Readline(int, void *, size_t);
+
 ssize_t	 writen(int, const void *, size_t);
+
+void	 str_echo(int);
+void	 str_cli(FILE *, int);
 
 /* prototypes for our stdio wrapper functions: see {Sec errors} */
 void	 Fclose(FILE *);
