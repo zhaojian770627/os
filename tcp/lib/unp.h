@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <signal.h>
 
 
 /* Define some port number that can be used for our examples */
@@ -29,6 +29,10 @@
 
 /* Following shortens all the typecasts of pointer arguments: */
 #define	SA	struct sockaddr
+
+typedef	void	Sigfunc(int);	/* for signal handlers */
+
+Sigfunc *Signal(int, Sigfunc *);
 
 ssize_t	 Readline(int, void *, size_t);
 
