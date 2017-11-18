@@ -1,5 +1,5 @@
 #
-EXEF=exit
+EXEF=exit maximum
 all:$(EXEF)
 #hello:
 #	nasm -f elf64 hello.s -o hello.o
@@ -11,5 +11,9 @@ all:$(EXEF)
 exit:
 	as -g exit.s -o exit.o
 	ld exit.o -o exit
+maximum:
+	as -g maximum.s -o maximum.o
+	ld maximum.o -o maximum
+
 clean:
 	$(RM) $(EXEF)  *.o *.lst *.bin

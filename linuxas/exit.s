@@ -5,7 +5,7 @@
 # 	%eax保存系统调用号
 # 	%ebx保存返回状态
 	.section .text
-	.global _start
+	.globl _start
 _start:
 	movl	$1,%eax
 	movl	$0,%ebx
