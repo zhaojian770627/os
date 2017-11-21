@@ -1,5 +1,5 @@
 #
-EXEF=exit maximum power
+EXEF=exit maximum power factor
 all:$(EXEF)
 #hello:
 #	nasm -f elf64 hello.s -o hello.o
@@ -17,6 +17,8 @@ maximum:
 power:
 	as --32 -g power.s -o power.o
 	ld -m elf_i386 power.o -o power
-
+factor:
+	as --32 -g factor.s -o factor.o
+	ld -m elf_i386 factor.o -o factor
 clean:
 	$(RM) $(EXEF)  *.o *.lst *.bin
