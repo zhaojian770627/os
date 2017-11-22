@@ -26,7 +26,7 @@ factorial:
 	decl	%eax
 	pushl	%eax
 	call	factorial
-	;; 此句可加可不加，因为ebp已恢复
+	# 此句可加可不加，因为ebp已恢复
 	addl	$4,%esp
 	
 	movl	8(%ebp),%ebx
