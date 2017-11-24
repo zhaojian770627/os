@@ -39,7 +39,7 @@
 	.equ	ST_ARGV_2,12
 
 	.globl _start
--start:
+_start:
 	movl	%esp,%ebp
 
 	subl	$ST_SIZE_RESERVE,%esp
@@ -152,7 +152,7 @@ convert_to_upper:
 	mov	$0,%edi
 
 	cmpl	$0,%ebx
-	je	eend_convert_loop
+	je	end_convert_loop
 
 convert_loop:
 	# 获取当前字节
@@ -160,15 +160,15 @@ convert_loop:
 
 	# 除非该字节在'a'和'z'之间，否则读取下一个字节
 	cmpb	$LOWERCASE_A,%cl
-	jl	next_type
+	jl	next_byte
 	cmpb	$LOWERCASE_Z,%cl
-	jg	next_type
+	jg	next_byte
 
 	# 转换为大写字母
 	addb	$UPPER_CONVERSION,%cl
 	# 存回原处
 	movb	%cl,(%eax,%edi,1)
-next_type:	
+next_byte:	
 	incl	%edi		# 下个字节
 	cmpl	%edi,%ebx
 	jne	convert_loop
@@ -177,3 +177,4 @@ end_convert_loop:
 	movl	%ebp,%esp
 	popl	%ebp
 	ret
+	
