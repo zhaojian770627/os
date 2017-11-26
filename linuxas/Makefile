@@ -1,5 +1,5 @@
 #
-EXEF=exit maximum power factor toupper
+EXEF=exit maximum power factor toupper write-records read-records
 all:$(EXEF)
 #hello:
 #	nasm -f elf64 hello.s -o hello.o
@@ -23,5 +23,15 @@ factor:
 toupper:
 	as --32 -g toupper.s -o toupper.o
 	ld -m elf_i386 toupper.o -o toupper
+write-records:
+	as --32 -g write-records.s -o write-records.o
+	as --32 -g write-record.s -o write-record.o
+	ld -m elf_i386 write-records.o write-record.o -o write-records
+read-records:
+	as --32 -g read-record.s -o read-record.o
+	as --32 -g count-chars.s -o count-chars.o
+	as --32 -g write-newline.s -o write-newline.o
+	as --32 -g read-records.s -o read-records.o
+	ld -m elf_i386 read-record.o count-chars.o write-newline.o read-records.o -o read-records
 clean:
 	$(RM) $(EXEF)  *.o *.lst *.bin
