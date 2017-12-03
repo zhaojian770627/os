@@ -15,7 +15,10 @@
 #include <string.h>
 #include <stdlib.h>
 #include <signal.h>
-
+#include <unistd.h>
+#include <sys/stat.h>
+#include <fcntl.h> 
+#include <sys/wait.h>
 
 /* Define some port number that can be used for our examples */
 #define	SERV_PORT		 9877			/* TCP and UDP */
@@ -34,6 +37,9 @@ typedef	void	Sigfunc(int);	/* for signal handlers */
 
 Sigfunc *Signal(int, Sigfunc *);
 
+#define	min(a,b)	((a) < (b) ? (a) : (b))
+#define	max(a,b)	((a) > (b) ? (a) : (b))
+
 ssize_t	 Readline(int, void *, size_t);
 
 ssize_t	 writen(int, const void *, size_t);
@@ -42,6 +48,7 @@ void	 str_echo(int);
 void	 str_cli(FILE *, int);
 
 /* prototypes for our stdio wrapper functions: see {Sec errors} */
+pid_t	 Fork(void);
 void	 Fclose(FILE *);
 FILE	*Fdopen(int, const char *);
 char	*Fgets(char *, int, FILE *);
@@ -49,9 +56,10 @@ FILE	*Fopen(const char *, const char *);
 void	 Fputs(const char *, FILE *);
 
 const char *Inet_ntop(int, const void *, char *, size_t);
-
+void  Inet_pton(int, const char *, void *);
 
 int	 Socket(int, int, int);
+void	 Connect(int, const SA *, socklen_t);
 void	 Bind(int, const SA *, socklen_t);
 void	 Listen(int, int);
 int	 Accept(int, SA *, socklen_t *);
@@ -59,6 +67,7 @@ void	 Write(int, void *, size_t);
 void	 Close(int);
 
 void	 Writen(int, void *, size_t);
+int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
 void	 err_dump(const char *, ...);
 void	 err_msg(const char *, ...);
