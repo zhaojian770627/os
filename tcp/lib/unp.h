@@ -40,6 +40,7 @@ Sigfunc *Signal(int, Sigfunc *);
 #define	min(a,b)	((a) < (b) ? (a) : (b))
 #define	max(a,b)	((a) > (b) ? (a) : (b))
 
+ssize_t	 Read(int, void *, size_t);
 ssize_t	 Readline(int, void *, size_t);
 
 ssize_t	 writen(int, const void *, size_t);
@@ -65,6 +66,7 @@ void	 Listen(int, int);
 int	 Accept(int, SA *, socklen_t *);
 void	 Write(int, void *, size_t);
 void	 Close(int);
+void	 Shutdown(int, int);
 
 void	 Writen(int, void *, size_t);
 int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
