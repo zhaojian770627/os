@@ -1,8 +1,9 @@
 	SELECTOR_KERNEL_CS	equ	8
 
 ;; 导入函数
-extern cstart
-extern exception_handler
+extern 	cstart
+extern 	kernel_main
+extern 	exception_handler
 extern	spurious_irq
 	
 ;; 导入全局变量
@@ -62,7 +63,8 @@ _start:
 	lidt	[idt_ptr]
 	jmp	SELECTOR_KERNEL_CS:csinit
 csinit:
-	sti
+	;sti
+	jmp	kernel_main
 	hlt
 
 ; 中断和异常 -- 硬件中断

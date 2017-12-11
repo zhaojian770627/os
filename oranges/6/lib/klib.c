@@ -5,12 +5,13 @@
                                                     Forrest Yu, 2005
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 
-#include "type.h"
-#include "const.h"
-#include "protect.h"
-#include "proto.h"
-#include "string.h"
-#include "global.h"
+#include "../include/type.h"
+#include "../include/const.h"
+#include "../include/protect.h"
+#include "../include/proto.h"
+#include "../include/string.h"
+#include "../include/proc.h"
+#include "../include/global.h"
 
 
 /*======================================================================*
@@ -57,4 +58,18 @@ PUBLIC void disp_int(int input)
 	char output[16];
 	itoa(output, input);
 	disp_str(output);
+}
+
+/*======================================================================*
+                               delay
+ *======================================================================*/
+PUBLIC void delay(int time)
+{
+  int i,j,k;
+  for(k=0;k<time;k++){
+    for(i=0;i<10;i++){
+      for(j=0;j<10000;j++){
+      }
+    }
+  }
 }

@@ -1,8 +1,9 @@
-#include "type.h"
-#include "const.h"
-#include "protect.h"
-#include "global.h"
-#include "proto.h"
+#include "../include/type.h"
+#include "../include/const.h"
+#include "../include/protect.h"
+#include "../include/proc.h"
+#include "../include/global.h"
+#include "../include/proto.h"
 
 /* 本文件内函数声明 */
 PRIVATE void init_idt_desc(unsigned char vector, u8 desc_type,

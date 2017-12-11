@@ -1,7 +1,11 @@
 #define GLOBAL_VARIABLES_HERE
 
-#include "type.h"
-#include "const.h"
-#include "protect.h"
-#include "proto.h"
-#include "global.h"
+#include "../include/type.h"
+#include "../include/const.h"
+#include "../include/protect.h"
+#include "../include/proto.h"
+#include "../include/proc.h"
+#include "../include/global.h"
+
+PUBLIC PROCESS proc_table[NR_TASKS];
+PUBLIC	char   task_stack[STACK_SIZE_TOTAL];
