@@ -1,4 +1,4 @@
-	SELECTOR_KERNEL_CS	equ	8
+%include "sconst.inc"
 
 ;; 导入函数
 extern 	cstart
@@ -9,6 +9,7 @@ extern	spurious_irq
 ;; 导入全局变量
 extern gdt_ptr
 extern idt_ptr
+extern p_proc_ready
 extern disp_pos
 extern tss
 	
@@ -20,6 +21,8 @@ StackTop:			;栈顶
 
 global _start	; 导出 _start
 
+global 	restart
+	
 global	divide_error
 global	single_step_exception
 global	nmi
@@ -220,3 +223,21 @@ exception:
 	call	exception_handler
 	add	esp, 4*2	; 让栈顶指向 EIP，堆栈中从顶向下依次是：EIP、CS、EFLAGS
 	hlt
+; ==============================================================================
+;                                   restart
+; =============================================================================
+restart:
+	mov	esp,[p_proc_ready]
+	lldt	[esp + P_LDT_SEL]
+	lea	eax,[esp + P_STACKTOP]
+	mov	dword[tss+TSS3_S_SP0],eax
+
+	pop	gs
+	pop	fs
+	pop	es
+	pop	ds
+	popad
+
+	add	esp,4
+	iretd
+	

@@ -11,7 +11,7 @@ CC		= gcc
 LD		= ld
 ASMBFLAGS	= -I boot/include/
 ASMKFLAGS	= -I include/ -f elf
-CFLAGS		= -I include/ -c -m32 -fno-stack-protector
+CFLAGS		= -I include/ -c -m32 -fno-stack-protector -fno-builtin
 LDFLAGS		= -s -m elf_i386 -Ttext $(ENTRYPOINT)
 DASMFLAGS	= -u -o $(ENTRYPOINT) -e $(ENTRYOFFSET)
 
@@ -58,7 +58,7 @@ $(ORANGESKERNEL):$(OBJS)
 	$(LD) $(LDFLAGS) -o $(ORANGESKERNEL) $(OBJS)
 kernel/kernel.o:kernel/kernel.s
 	$(ASM) $(ASMKFLAGS) -o $@ $<
-kernel/klib.o:
+kernel/klib.o:lib/klib.c include/type.h include/const.h include/protect.h include/string.h include/proc.h include/proto.h include/global.h
 	$(CC) $(CFLAGS) -o $@ $<
 kernel/protect.o : kernel/protect.c
 	$(CC) $(CFLAGS) -o $@ $<
