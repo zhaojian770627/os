@@ -26,6 +26,36 @@ typedef struct s_gate
 	u16	offset_high;	/* Offset High */
 }GATE;
 
+typedef struct s_tss {
+	u32	backlink;
+	u32	esp0;	/* stack pointer to use during interrupt */
+	u32	ss0;	/*   "   segment  "  "    "        "     */
+	u32	esp1;
+	u32	ss1;
+	u32	esp2;
+	u32	ss2;
+	u32	cr3;
+	u32	eip;
+	u32	flags;
+	u32	eax;
+	u32	ecx;
+	u32	edx;
+	u32	ebx;
+	u32	esp;
+	u32	ebp;
+	u32	esi;
+	u32	edi;
+	u32	es;
+	u32	cs;
+	u32	ss;
+	u32	ds;
+	u32	fs;
+	u32	gs;
+	u32	ldt;
+	u16	trap;
+	u16	iobase;	/* I/O位图基址大于或等于TSS段界限，就表示没有I/O许可位图 */
+}TSS;
+
 /* GDT */
 /* 描述符索引 */
 #define	INDEX_DUMMY		0	/* \                         */
@@ -115,4 +145,7 @@ typedef struct s_gate
 #define	INT_VECTOR_IRQ0			0x20
 #define	INT_VECTOR_IRQ8			0x28
 
+/* 宏 */
+/* 线性地址 → 物理地址 */
+#define vir2phys(seg_base, vir)	(u32)(((u32)seg_base) + (u32)(vir))
 #endif	/* _ORANGES_PROTECT_H_ */

@@ -10,6 +10,7 @@ extern	spurious_irq
 extern gdt_ptr
 extern idt_ptr
 extern disp_pos
+extern tss
 	
 [SECTION .bss]
 StackSpace	resb	2*1024
@@ -56,7 +57,7 @@ global  hwint15
 _start:
 	;; 把esp从LOADER挪到KERNEL
 	mov	esp,StackTop	;堆栈在bss段中
-
+	mov	dword[disp_pos],0
 	sgdt	[gdt_ptr]	;cstart()中将会用到gdt_ptr
 	call	cstart		;此函数中改变了gdt_ptr,让它指向新的gdt
 	lgdt	[gdt_ptr]	;使用新的GDT
@@ -64,6 +65,11 @@ _start:
 	jmp	SELECTOR_KERNEL_CS:csinit
 csinit:
 	;sti
+
+	xor	eax,eax
+	mov	ax,SELECTOR_TSS
+	ltr	ax
+	
 	jmp	kernel_main
 	hlt
 
