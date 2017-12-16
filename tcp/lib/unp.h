@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include <fcntl.h> 
 #include <sys/wait.h>
+#include <poll.h>
 
 /* Define some port number that can be used for our examples */
 #define	SERV_PORT		 9877			/* TCP and UDP */
@@ -70,6 +71,7 @@ void	 Shutdown(int, int);
 
 void	 Writen(int, void *, size_t);
 int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
+int	 Poll(struct pollfd *, unsigned long, int);
 
 void	 err_dump(const char *, ...);
 void	 err_msg(const char *, ...);
