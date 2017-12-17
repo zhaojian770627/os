@@ -8,7 +8,8 @@
 
 PUBLIC int kernel_main()
 {
-  disp_str("-----\"kernel_main\" begins-------\n");
+  put_string("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\r");
+  put_string("-----\"kernel_main\" begins-------\r\n");
 
   PROCESS* p_proc=proc_table;
 
@@ -38,9 +39,9 @@ void TestA()
 {
   int i=0;
   while(1){
-    disp_str("A");
-    disp_int(i++);
-    disp_str(".");
-    delay(1);
+    put_string("A");
+    put_int(i++);
+    put_string(".");
+    delay(1000);
   }
 }
