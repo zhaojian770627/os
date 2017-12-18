@@ -22,6 +22,7 @@ StackTop:			;栈顶
 global _start	; 导出 _start
 
 global 	restart
+global 	stop
 	
 global	divide_error
 global	single_step_exception
@@ -243,4 +244,6 @@ restart:
 
 	add	esp,4
 	iretd
-	
+stop:
+	halt
+	jmp 	stop

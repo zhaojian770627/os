@@ -15,6 +15,7 @@ PUBLIC void     delay(int time);
 
 /* kernel.asm */
 void restart();
+void stop();
 
 /* main.c */
 void TestA();

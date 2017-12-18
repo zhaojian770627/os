@@ -38,10 +38,11 @@ PUBLIC int kernel_main()
 void TestA()
 {
   int i=0;
-  while(1){
+  while(i<20){
     put_string("A");
     put_int(i++);
     put_string(".");
     delay(1000);
   }
+  stop();
 }
