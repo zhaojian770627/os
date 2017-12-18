@@ -88,9 +88,37 @@ csinit:
 
 	ALIGN   16
 hwint00:                ; Interrupt routine for irq 0 (the clock).
+	sub	esp,4
+	pushad
+	push	ds
+	push	es
+	push	fs
+	push	gs
+
+	mov	dx,ss
+	mov	ds,dx
+	mov	es,dx
+
+	mov	esp,StackTop	;切到内核栈
+
 	inc	byte[gs:0]
+	
 	mov	al,EOI
 	out	INT_M_CTL,al
+
+	mov	esp,[p_proc_ready] ;离开内核栈
+	
+	lea	eax,[esp+P_STACKTOP]
+	mov	dword[tss+TSS3_S_SP0],eax
+	
+	pop	gs
+	pop	fs
+	pop	es
+	pop	ds
+	popad
+
+	add	esp,4
+	
 	iretd
 
 ALIGN   16
