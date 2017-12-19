@@ -5,6 +5,7 @@ extern 	cstart
 extern 	kernel_main
 extern 	exception_handler
 extern	spurious_irq
+extern  put_string
 	
 ;; 导入全局变量
 extern gdt_ptr
@@ -12,6 +13,9 @@ extern idt_ptr
 extern p_proc_ready
 extern disp_pos
 extern tss
+
+[SECTION .data]
+clock_int_msg	db	"^",0
 	
 [SECTION .bss]
 StackSpace	resb	2*1024
@@ -105,6 +109,10 @@ hwint00:                ; Interrupt routine for irq 0 (the clock).
 	
 	mov	al,EOI
 	out	INT_M_CTL,al
+
+	push	clock_int_msg
+	call	put_string
+	add	esp,4
 
 	mov	esp,[p_proc_ready] ;离开内核栈
 	
