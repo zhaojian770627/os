@@ -6,6 +6,7 @@ extern 	kernel_main
 extern 	exception_handler
 extern	spurious_irq
 extern  put_string
+extern  delay
 	
 ;; 导入全局变量
 extern gdt_ptr
@@ -13,7 +14,8 @@ extern idt_ptr
 extern p_proc_ready
 extern disp_pos
 extern tss
-
+extern k_reenter
+	
 [SECTION .data]
 clock_int_msg	db	"^",0
 	
@@ -103,13 +105,17 @@ hwint00:                ; Interrupt routine for irq 0 (the clock).
 	mov	ds,dx
 	mov	es,dx
 
-	mov	esp,StackTop	;切到内核栈
-
 	inc	byte[gs:0]
 	
 	mov	al,EOI
 	out	INT_M_CTL,al
 
+	inc	dword[k_reenter]
+	cmp	dword[k_reenter],0
+	jne	.re_enter
+
+	mov	esp,StackTop	;切到内核栈
+	
 	push	clock_int_msg
 	call	put_string
 	add	esp,4
@@ -118,7 +124,9 @@ hwint00:                ; Interrupt routine for irq 0 (the clock).
 	
 	lea	eax,[esp+P_STACKTOP]
 	mov	dword[tss+TSS3_S_SP0],eax
-	
+
+.re_enter:
+	dec	dword[k_reenter]
 	pop	gs
 	pop	fs
 	pop	es
