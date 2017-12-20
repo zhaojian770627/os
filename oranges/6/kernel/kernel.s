@@ -5,6 +5,7 @@ extern 	cstart
 extern 	kernel_main
 extern 	exception_handler
 extern	spurious_irq
+extern  clock_handler
 extern  put_string
 extern  delay
 	
@@ -116,12 +117,14 @@ hwint00:                ; Interrupt routine for irq 0 (the clock).
 
 	mov	esp,StackTop	;切到内核栈
 	
-	push	clock_int_msg
-	call	put_string
+	sti
+	push	0
+	call	clock_handler
 	add	esp,4
-
-	mov	esp,[p_proc_ready] ;离开内核栈
+	cli
 	
+	mov	esp,[p_proc_ready] ;离开内核栈
+	lldt	[esp+P_LDT_SEL]
 	lea	eax,[esp+P_STACKTOP]
 	mov	dword[tss+TSS3_S_SP0],eax
 
