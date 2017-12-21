@@ -54,6 +54,11 @@ struct sock_opts {
 #else
   { "IPV6_UNICAST_HOPS",	0,		0,		NULL },
 #endif
+#ifdef	IPV6_V6ONLY
+  { "IPV6_V6ONLY",		IPPROTO_IPV6,IPV6_V6ONLY,	sock_str_flag },
+#else
+  { "IPV6_V6ONLY",		0,		0,		NULL },
+#endif
   { NULL,			0,		0,		NULL }
 };
 
