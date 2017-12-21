@@ -29,7 +29,18 @@ struct sock_opts {
   { "SO_LINGER",		SOL_SOCKET,	SO_LINGER,	sock_str_linger },
   { "SO_OOBINLINE",		SOL_SOCKET,	SO_OOBINLINE,	sock_str_flag },
   { "SO_RCVBUF",		SOL_SOCKET,	SO_RCVBUF,	sock_str_int },
-{ "SO_SNDBUF",			SOL_SOCKET,	SO_SNDBUF,	sock_str_int },
+  { "SO_SNDBUF",		SOL_SOCKET,	SO_SNDBUF,	sock_str_int },
+  { "SO_RCVLOWAT",		SOL_SOCKET,	SO_RCVLOWAT,	sock_str_int },
+  { "SO_SNDLOWAT",		SOL_SOCKET,	SO_SNDLOWAT,	sock_str_int },
+  { "SO_RCVTIMEO",		SOL_SOCKET,	SO_RCVTIMEO,	sock_str_timeval },
+  { "SO_SNDTIMEO",		SOL_SOCKET,	SO_SNDTIMEO,	sock_str_timeval },
+  { "SO_REUSEADDR",		SOL_SOCKET,	SO_REUSEADDR,	sock_str_flag },
+#ifdef	SO_REUSEPORT
+  { "SO_REUSEPORT",		SOL_SOCKET,	SO_REUSEPORT,	sock_str_flag },
+#else
+  { "SO_REUSEPORT",		0,		0,		NULL },
+#endif
+  { "SO_TYPE",			SOL_SOCKET,	SO_TYPE,	sock_str_int },
 
   { NULL,			0,		0,		NULL }
 };
@@ -122,4 +133,18 @@ sock_str_linger(union val *ptr, int len)
     snprintf(strres, sizeof(strres), "l_onoff = %d, l_linger = %d",
 	     lptr->l_onoff, lptr->l_linger);
   return(strres);
+}
+
+static char	*
+sock_str_timeval(union val *ptr, int len)
+{
+	struct timeval	*tvptr = &ptr->timeval_val;
+
+	if (len != sizeof(struct timeval))
+		snprintf(strres, sizeof(strres),
+				 "size (%d) not sizeof(struct timeval)", len);
+	else
+		snprintf(strres, sizeof(strres), "%ld sec, %ld usec",
+				 tvptr->tv_sec, tvptr->tv_usec);
+	return(strres);
 }
