@@ -49,7 +49,11 @@ struct sock_opts {
 #else
   { "IPV6_DONTFRAG",		0,		0,		NULL },
 #endif
-
+#ifdef	IPV6_UNICAST_HOPS
+  { "IPV6_UNICAST_HOPS",	IPPROTO_IPV6,IPV6_UNICAST_HOPS,sock_str_int },
+#else
+  { "IPV6_UNICAST_HOPS",	0,		0,		NULL },
+#endif
   { NULL,			0,		0,		NULL }
 };
 
