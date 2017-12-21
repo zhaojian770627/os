@@ -41,6 +41,14 @@ struct sock_opts {
   { "SO_REUSEPORT",		0,		0,		NULL },
 #endif
   { "SO_TYPE",			SOL_SOCKET,	SO_TYPE,	sock_str_int },
+  //  { "SO_USELOOPBACK",		SOL_SOCKET,	SO_USELOOPBACK,	sock_str_flag },
+  { "IP_TOS",			IPPROTO_IP,	IP_TOS,		sock_str_int },
+  { "IP_TTL",			IPPROTO_IP,	IP_TTL,         sock_str_int },
+#ifdef	IPV6_DONTFRAG
+  { "IPV6_DONTFRAG",		IPPROTO_IPV6,IPV6_DONTFRAG,	sock_str_flag },
+#else
+  { "IPV6_DONTFRAG",		0,		0,		NULL },
+#endif
 
   { NULL,			0,		0,		NULL }
 };
