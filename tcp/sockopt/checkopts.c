@@ -59,6 +59,28 @@ struct sock_opts {
 #else
   { "IPV6_V6ONLY",		0,		0,		NULL },
 #endif
+  { "TCP_MAXSEG",		IPPROTO_TCP,TCP_MAXSEG,		sock_str_int },
+  { "TCP_NODELAY",		IPPROTO_TCP,TCP_NODELAY,	sock_str_flag },
+#ifdef	SCTP_AUTOCLOSE
+  { "SCTP_AUTOCLOSE",		IPPROTO_SCTP,SCTP_AUTOCLOSE,sock_str_int },
+#else
+  { "SCTP_AUTOCLOSE",		0,			0,	NULL },
+#endif
+#ifdef	SCTP_MAXBURST
+  { "SCTP_MAXBURST",		IPPROTO_SCTP,SCTP_MAXBURST,	sock_str_int },
+#else
+  { "SCTP_MAXBURST",		0,			0,	NULL },
+#endif
+#ifdef	SCTP_MAXSEG
+  { "SCTP_MAXSEG",		IPPROTO_SCTP,SCTP_MAXSEG,	sock_str_int },
+#else
+  { "SCTP_MAXSEG",		0,			0,	NULL },
+#endif
+#ifdef	SCTP_NODELAY
+  { "SCTP_NODELAY",		IPPROTO_SCTP,SCTP_NODELAY,	sock_str_flag },
+#else
+  { "SCTP_NODELAY",		0,			0,      NULL },
+#endif
   { NULL,			0,		0,		NULL }
 };
 
