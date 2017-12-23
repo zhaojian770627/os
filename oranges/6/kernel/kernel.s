@@ -16,6 +16,7 @@ extern p_proc_ready
 extern disp_pos
 extern tss
 extern k_reenter
+extern irq_table
 	
 [SECTION .data]
 clock_int_msg	db	"^",0
@@ -87,18 +88,10 @@ csinit:
 ; 中断和异常 -- 硬件中断
 ; ---------------------------------
 %macro  hwint_master    1
-        push    %1
-        call    spurious_irq
-        add     esp, 4
-        hlt
-%endmacro
-
-	ALIGN   16
-hwint00:                ; Interrupt routine for irq 0 (the clock).
 	call	save
 	
 	in 	al,INT_M_CTLMASK
-	or	al,1
+	or	al,(1<<%1)
 	out	INT_M_CTLMASK,al
 
 	mov	al,EOI
@@ -106,14 +99,19 @@ hwint00:                ; Interrupt routine for irq 0 (the clock).
 
 	sti
 	
-	push	0
-	call	clock_handler
-	add	esp,4
+	push	%1
+	call	[irq_table+4*%1]
+	pop	ecx
 	cli
-
 	in	al,INT_M_CTLMASK
-	and	al,0xFE
+	and	al,~(1<<%1)
 	out	INT_M_CTLMASK,al
+	ret
+%endmacro
+
+	ALIGN   16
+hwint00:                ; Interrupt routine for irq 0 (the clock).
+	hwint_master   0
 
 	ret
 	

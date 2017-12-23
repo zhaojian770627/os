@@ -6,6 +6,8 @@ PUBLIC void     put_int(int input);
 PUBLIC void	disp_str(char * info);
 PUBLIC void     put_string(char *info);
 PUBLIC void	disp_color_str(char * info, int color);
+PUBLIC void     enable_irq(u8 value);
+PUBLIC void     disable_irq(u8 value);
 
 PUBLIC void	init_prot();
 PUBLIC void	init_8259A();
@@ -21,3 +23,10 @@ void stop();
 void TestA();
 void TestB();
 void TestC();
+
+/* i8259.c */
+PUBLIC void put_irq_handler(int irq, irq_handler handler);
+PUBLIC void spurious_irq(int irq);
+
+/* clock.c */
+PUBLIC void clock_handler(int irq);
