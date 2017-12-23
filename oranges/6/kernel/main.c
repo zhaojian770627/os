@@ -45,7 +45,7 @@ PUBLIC int kernel_main()
     selector_ldt+=1<<3;
   }
 
-  k_reenter = -1;
+  k_reenter = 0;
   p_proc_ready=proc_table;
   restart();
   while(1){
@@ -68,6 +68,17 @@ void TestB()
   int i=0;
   while(1){
     put_string("B");
+    put_int(i++);
+    put_string(".");
+    delay(1000);
+  }
+}
+
+void TestC()
+{
+  int i=0x1000;
+  while(1){
+    put_string("C");
     put_int(i++);
     put_string(".");
     delay(1000);

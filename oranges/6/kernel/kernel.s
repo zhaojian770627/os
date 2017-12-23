@@ -95,51 +95,28 @@ csinit:
 
 	ALIGN   16
 hwint00:                ; Interrupt routine for irq 0 (the clock).
-	sub	esp,4
-	pushad
-	push	ds
-	push	es
-	push	fs
-	push	gs
-
-	mov	dx,ss
-	mov	ds,dx
-	mov	es,dx
-
-	inc	byte[gs:0]
+	call	save
 	
+	in 	al,INT_M_CTLMASK
+	or	al,1
+	out	INT_M_CTLMASK,al
+
 	mov	al,EOI
 	out	INT_M_CTL,al
 
-	inc	dword[k_reenter]
-	cmp	dword[k_reenter],0
-	jne	.re_enter
-
-	mov	esp,StackTop	;切到内核栈
-	
 	sti
+	
 	push	0
 	call	clock_handler
 	add	esp,4
 	cli
+
+	in	al,INT_M_CTLMASK
+	and	al,0xFE
+	out	INT_M_CTLMASK,al
+
+	ret
 	
-	mov	esp,[p_proc_ready] ;离开内核栈
-	lldt	[esp+P_LDT_SEL]
-	lea	eax,[esp+P_STACKTOP]
-	mov	dword[tss+TSS3_S_SP0],eax
-
-.re_enter:
-	dec	dword[k_reenter]
-	pop	gs
-	pop	fs
-	pop	es
-	pop	ds
-	popad
-
-	add	esp,4
-	
-	iretd
-
 ALIGN   16
 hwint01:                ; Interrupt routine for irq 1 (keyboard)
         hwint_master    1
@@ -274,21 +251,48 @@ exception:
 	call	exception_handler
 	add	esp, 4*2	; 让栈顶指向 EIP，堆栈中从顶向下依次是：EIP、CS、EFLAGS
 	hlt
-; ==============================================================================
+
+;;; ======================================================================
+;;; save
+;;; ======================================================================
+save:
+	pushad
+	push	ds
+	push	es
+	push	fs
+	push	gs
+
+	mov	dx,ss
+	mov	ds,dx
+	mov	es,dx
+
+	mov	eax,esp
+
+	inc	dword[k_reenter]
+	cmp	dword[k_reenter],0
+	jne	.1
+	mov	esp,StackTop
+	push	restart
+	jmp	[eax + RETADR - P_STACKBASE]
+.1:
+	push	restart_reenter
+	jmp	[eax + RETADR - P_STACKBASE]
+	
+; ==========================================================================
 ;                                   restart
-; =============================================================================
+; ==========================================================================
 restart:
 	mov	esp,[p_proc_ready]
 	lldt	[esp + P_LDT_SEL]
 	lea	eax,[esp + P_STACKTOP]
 	mov	dword[tss+TSS3_S_SP0],eax
-
+restart_reenter:
+	dec	dword[k_reenter]
 	pop	gs
 	pop	fs
 	pop	es
 	pop	ds
 	popad
-
 	add	esp,4
 	iretd
 stop:
