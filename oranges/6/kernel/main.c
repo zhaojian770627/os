@@ -59,6 +59,7 @@ void TestA()
 {
   int i=0;
   while(1){
+    get_ticks();
     put_string("A");
     put_int(i++);
     put_string(".");
