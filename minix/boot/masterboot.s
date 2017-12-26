@@ -8,7 +8,7 @@
 	bootind	   equ	     0
 	sysind	   equ	     4
 	lowsec	   equ	     8
-[section .text]
+[SECTION .text vstart=0x7c00]
 master:
 	xor	ax, ax
 	mov	ds, ax
@@ -18,4 +18,20 @@ master:
 	mov	sp, LOADOFF
 	sti
 	;; Copy this code to safety, then jump to it.
-	
+	mov	si,sp
+	push	si
+	mov	di,BUFFER
+	mov	cx,256
+	cld
+	rep	movsw
+	jmp	0:(BUFFER+(migrate-$$))
+migrate:
+;;; Find the active partition
+findactive:
+	test	dl,dl
+	jns	nextdisk
+nextdisk:	
+	jmp 	migrate
+;;; ========================================================
+	times	510-($-$$) db 0
+			   db 0x55,0xaa
