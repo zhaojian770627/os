@@ -46,11 +46,15 @@ PUBLIC int kernel_main()
   }
 
   k_reenter = 0;
+  ticks=0;
+
   p_proc_ready=proc_table;
+
   put_irq_handler(CLOCK_IRQ,clock_handler);
   enable_irq(CLOCK_IRQ);
 
   restart();
+
   while(1){
   }
 }
@@ -59,9 +63,8 @@ void TestA()
 {
   int i=0;
   while(1){
-    get_ticks();
     put_string("A");
-    put_int(i++);
+    put_int(get_ticks());
     put_string(".");
     delay(1000);
   }

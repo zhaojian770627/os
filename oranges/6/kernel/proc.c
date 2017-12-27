@@ -11,6 +11,5 @@
  *======================================================================*/
 PUBLIC int sys_get_ticks()
 {
-	put_string("+");
-	return 0;
+	return ticks;
 }

@@ -20,6 +20,7 @@
 PUBLIC void clock_handler(int irq)
 {
   put_string("#");
+  ticks++;
 
   if(k_reenter!=0){
     put_string("!");
