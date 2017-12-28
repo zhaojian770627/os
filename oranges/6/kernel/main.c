@@ -50,6 +50,11 @@ PUBLIC int kernel_main()
 
   p_proc_ready=proc_table;
 
+  /* 初始化 8253 PIT */
+  out_byte(TIMER_MODE, RATE_GENERATOR);
+  out_byte(TIMER0, (u8) (TIMER_FREQ/HZ) );
+  out_byte(TIMER0, (u8) ((TIMER_FREQ/HZ) >> 8));
+
   put_irq_handler(CLOCK_IRQ,clock_handler);
   enable_irq(CLOCK_IRQ);
 
@@ -61,33 +66,24 @@ PUBLIC int kernel_main()
 
 void TestA()
 {
-  int i=0;
   while(1){
-    put_string("A");
-    put_int(get_ticks());
-    put_string(".");
-    delay(1000);
+    put_string("A.");
+    milli_delay(300);
   }
 }
 
 void TestB()
 {
-  int i=0;
   while(1){
-    put_string("B");
-    put_int(i++);
-    put_string(".");
-    delay(1000);
+    put_string("B.");
+    milli_delay(900);
   }
 }
 
 void TestC()
 {
-  int i=0x1000;
   while(1){
-    put_string("C");
-    put_int(i++);
-    put_string(".");
-    delay(1000);
+    put_string("C.");
+    milli_delay(1500);
   }
 }
