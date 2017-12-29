@@ -8,6 +8,21 @@
 #define PUBLIC			/* PUBLIC is the opposite of PRIVATE */
 #define PRIVATE static		/* PRIVATE x limits the scope of x */
 
+/* Color */
+/*
+ * e.g. MAKE_COLOR(BLUE, RED)
+ *      MAKE_COLOR(BLACK, RED) | BRIGHT
+ *      MAKE_COLOR(BLACK, RED) | BRIGHT | FLASH
+ */
+#define BLACK   0x0     /* 0000 */
+#define WHITE   0x7     /* 0111 */
+#define RED     0x4     /* 0100 */
+#define GREEN   0x2     /* 0010 */
+#define BLUE    0x1     /* 0001 */
+#define FLASH   0x80    /* 1000 0000 */
+#define BRIGHT  0x08    /* 0000 1000 */
+#define MAKE_COLOR(x,y) (x | y) /* MAKE_COLOR(Background,Foreground) */
+
 /* 8259A interrupt controller ports. */
 #define INT_M_CTL     0x20 /* I/O port for interrupt controller       <Master> */
 #define INT_M_CTLMASK 0x21 /* setting bits in this port disables ints <Master> */

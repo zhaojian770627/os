@@ -14,6 +14,7 @@ extern disp_pos
 global	disp_str
 global	disp_color_str
 global  put_string
+global  put_color_string
 global	out_byte
 global	in_byte
 global	enable_irq
@@ -187,6 +188,131 @@ put_char:                                   ;在当前光标处显示一个字�
 .put_other:                               ;正常显示字符
 	shl	bx,1
 	mov	[gs:ebx],cl ;在光标位置处显示字符
+	
+        ;以下将光标位置推进一个字符
+        shr 	bx,1
+        inc 	bx
+
+.roll_screen:
+        cmp 	bx,2000                        ;光标超出屏幕？滚屏
+        jl 	.set_cursor
+		
+        cld
+	push	ds
+	push	es
+	
+	push 	gs
+	pop 	ds
+	push	gs
+	pop	es
+	mov 	esi,0x0a0                 ;小心！32位模式下movsb/w/d 
+	mov	edi,0x000		       ;使用的是esi/edi/ecx
+        mov 	ecx,1920
+        rep 	movsd
+
+	pop	es
+	pop	ds
+	
+        mov 	bx,3840                        ;清除屏幕最底一行
+        mov 	ecx,80                         ;32位程序应该使用ECX
+.cls:
+        mov 	word[gs:ebx],0x0720
+        add 	bx,2
+        loop 	.cls
+
+        mov 	bx,1920
+
+.set_cursor:
+        mov 	dx,0x3d4
+        mov 	al,0x0e
+        out 	dx,al
+        inc 	dx                             ;0x3d5
+        mov 	al,bh
+        out 	dx,al
+        dec 	dx                             ;0x3d4
+        mov 	al,0x0f
+        out 	dx,al
+        inc 	dx                             ;0x3d5
+        mov 	al,bl
+        out 	dx,al
+
+        popad
+        ret
+
+
+
+;===================================================================
+         ;字符串显示例程 带色彩
+put_color_string:                                 ;显示0终止的字符串并移动光标 
+                                            ;输入：DS:EBX=串地址
+	push	ebp
+	mov	ebp,esp
+
+	push 	ebx
+	push	ecx
+
+	mov	ebx,[ebp+8]
+	mov	ch,[ebp+12]
+	
+	cli			;硬件操作期间，关中断
+.getc:
+        mov 	cl,[ebx]
+        test	cl,cl
+        jz 	.exit
+        call 	put_color_char
+        inc 	ebx
+        jmp 	.getc
+
+.exit:
+	sti			;硬件操作完毕，开放中断
+	
+        pop 	ecx
+	pop	ebx
+	pop	ebp
+	
+        ret                               ;段间返回
+
+;--------------------------------------------------------------------
+put_color_char:                                   ;在当前光标处显示一个字符,并推进
+                                            ;光标。仅用于段内调用 
+                                            ;输入：CL=字符ASCII码 
+        pushad
+
+        ;以下取当前光标位置
+        mov 	dx,0x3d4
+        mov 	al,0x0e
+        out 	dx,al
+        inc 	dx                             ;0x3d5
+        in 	al,dx                           ;高字
+        mov 	ah,al
+
+        dec 	dx                             ;0x3d4
+        mov 	al,0x0f
+        out 	dx,al
+        inc 	dx                             ;0x3d5
+        in 	al,dx                           ;低字
+        mov 	bx,ax                          ;BX=代表光标位置的16位数
+	and	ebx,0x0000ffff		    ;准备使用32位寻址方式访问显存
+	
+        cmp 	cl,0x0d                        ;回车符？
+        jnz 	.put_0a
+	
+        mov 	ax,bx
+        mov 	bl,80
+        div 	bl
+        mul 	bl
+        mov 	bx,ax
+        jmp 	.set_cursor
+
+.put_0a:
+        cmp 	cl,0x0a                        ;换行符？
+        jnz 	.put_other
+        add 	bx,80
+        jmp 	.roll_screen
+
+.put_other:                               ;正常显示字符
+	shl	bx,1
+	mov	[gs:ebx],cx ;在光标位置处显示字符
 	
         ;以下将光标位置推进一个字符
         shr 	bx,1

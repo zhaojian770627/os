@@ -45,6 +45,10 @@ PUBLIC int kernel_main()
     selector_ldt+=1<<3;
   }
 
+  proc_table[0].ticks = proc_table[0].priority = 150;
+  proc_table[1].ticks = proc_table[1].priority =  50;
+  proc_table[2].ticks = proc_table[2].priority =  30;
+
   k_reenter = 0;
   ticks=0;
 
@@ -62,28 +66,29 @@ PUBLIC int kernel_main()
 
   while(1){
   }
+  stop();
 }
 
 void TestA()
 {
   while(1){
-    put_string("A.");
-    milli_delay(300);
+    put_color_string("A.",BRIGHT | MAKE_COLOR(BLACK, RED));
+    milli_delay(200);
   }
 }
 
 void TestB()
 {
   while(1){
-    put_string("B.");
-    milli_delay(900);
+    put_color_string("B.",BRIGHT | MAKE_COLOR(BLACK, BLUE));
+    milli_delay(200);
   }
 }
 
 void TestC()
 {
   while(1){
-    put_string("C.");
-    milli_delay(1500);
+    put_color_string("C.",BRIGHT | MAKE_COLOR(BLACK, GREEN));
+    milli_delay(200);
   }
 }

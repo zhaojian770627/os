@@ -5,6 +5,7 @@ PUBLIC void     disp_int(int input);
 PUBLIC void     put_int(int input);
 PUBLIC void	disp_str(char * info);
 PUBLIC void     put_string(char *info);
+PUBLIC void     put_color_string(char *info,int color);
 PUBLIC void	disp_color_str(char * info, int color);
 PUBLIC void     enable_irq(u8 value);
 PUBLIC void     disable_irq(u8 value);
@@ -36,6 +37,7 @@ PUBLIC void milli_delay(int milli_sec);
 
 /* proc.c */
 PUBLIC  int     sys_get_ticks();        /* sys_call */
+PUBLIC void schedule();
 
 /* syscall.s */
 PUBLIC  void    sys_call();             /* int_handler */

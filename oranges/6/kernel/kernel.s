@@ -307,5 +307,5 @@ restart_reenter:
 	add	esp,4
 	iretd
 stop:
-	halt
+	hlt
 	jmp 	stop

@@ -20,14 +20,13 @@
 PUBLIC void clock_handler(int irq)
 {
   ticks++;
+  p_proc_ready->ticks--;
 
   if(k_reenter!=0){
     return;
   }
-  p_proc_ready++;
 
-  if(p_proc_ready>=proc_table+NR_TASKS)
-    p_proc_ready=proc_table;
+  schedule();
 }
 
 /* 
