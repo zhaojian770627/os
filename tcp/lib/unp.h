@@ -48,6 +48,8 @@ ssize_t	 writen(int, const void *, size_t);
 
 void	 str_echo(int);
 void	 str_cli(FILE *, int);
+void	 dg_echo(int, SA *, socklen_t);
+void	 dg_cli(FILE *, int, const SA *, socklen_t);
 
 /* prototypes for our stdio wrapper functions: see {Sec errors} */
 pid_t	 Fork(void);
@@ -72,6 +74,8 @@ void	 Shutdown(int, int);
 void	 Writen(int, void *, size_t);
 int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 int	 Poll(struct pollfd *, unsigned long, int);
+void	 Sendto(int, const void *, size_t, int, const SA *, socklen_t);
+ssize_t	 Recvfrom(int, void *, size_t, int, SA *, socklen_t *);
 
 void	 err_dump(const char *, ...);
 void	 err_msg(const char *, ...);
