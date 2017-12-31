@@ -111,12 +111,10 @@ csinit:
 	ret
 %endmacro
 
-	ALIGN   16
+ALIGN   16
 hwint00:                ; Interrupt routine for irq 0 (the clock).
 	hwint_master   0
 
-	ret
-	
 ALIGN   16
 hwint01:                ; Interrupt routine for irq 1 (keyboard)
         hwint_master    1

@@ -54,13 +54,8 @@ PUBLIC int kernel_main()
 
   p_proc_ready=proc_table;
 
-  /* 初始化 8253 PIT */
-  out_byte(TIMER_MODE, RATE_GENERATOR);
-  out_byte(TIMER0, (u8) (TIMER_FREQ/HZ) );
-  out_byte(TIMER0, (u8) ((TIMER_FREQ/HZ) >> 8));
-
-  put_irq_handler(CLOCK_IRQ,clock_handler);
-  enable_irq(CLOCK_IRQ);
+  init_clock();
+  init_keyboard();
 
   restart();
 
@@ -72,7 +67,7 @@ PUBLIC int kernel_main()
 void TestA()
 {
   while(1){
-    put_color_string("A.",BRIGHT | MAKE_COLOR(BLACK, RED));
+    //put_color_string("A.",BRIGHT | MAKE_COLOR(BLACK, RED));
     milli_delay(200);
   }
 }
@@ -80,7 +75,7 @@ void TestA()
 void TestB()
 {
   while(1){
-    put_color_string("B.",BRIGHT | MAKE_COLOR(BLACK, BLUE));
+    //put_color_string("B.",BRIGHT | MAKE_COLOR(BLACK, BLUE));
     milli_delay(200);
   }
 }
@@ -88,7 +83,7 @@ void TestB()
 void TestC()
 {
   while(1){
-    put_color_string("C.",BRIGHT | MAKE_COLOR(BLACK, GREEN));
+    //put_color_string("C.",BRIGHT | MAKE_COLOR(BLACK, GREEN));
     milli_delay(200);
   }
 }
