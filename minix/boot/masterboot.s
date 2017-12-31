@@ -26,12 +26,30 @@ master:
 	rep	movsw
 	jmp	0:(BUFFER+(migrate-$$))
 migrate:
+	call	print
+	db	'hello',0
+	hlt
+	jmp	migrate
 ;;; Find the active partition
 findactive:
 	test	dl,dl
 	jns	nextdisk
 nextdisk:	
 	jmp 	migrate
+
+;;; Print a message
+print:
+	pop	si
+prnext:
+	lodsb
+	test	al,al
+	jz 	prdone
+	mov	ah,0x0e
+	mov	bx,0x1
+	int	0x10
+	jmp	prnext
+prdone:
+	jmp	[si]
 ;;; ========================================================
 	times	510-($-$$) db 0
 			   db 0x55,0xaa
