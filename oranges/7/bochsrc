@@ -1,0 +1,19 @@
+#./configure --enable-debugger --enable-disasm  调试功能
+#  --enable-gdb-stub 调试C语言内核
+
+megs:32
+
+romimage:file=/usr/local/share/bochs/BIOS-bochs-latest
+vgaromimage:file=/usr/local/share/bochs/VGABIOS-lgpl-latest
+
+floppya:1_44=/home/zj/imgs/pig.img,status=inserted
+
+boot:floppy
+
+log:bochsout.txt
+
+mouse:enabled=0
+
+keyboard:keymap=/usr/local/share/bochs/keymaps/x11-pc-us.map
+# target remote localhost:1234
+#gdbstub: enabled=1, port=1234, text_base=0, data_base=0, bss_base=0
