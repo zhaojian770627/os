@@ -20,6 +20,7 @@
 #include <fcntl.h> 
 #include <sys/wait.h>
 #include <poll.h>
+#include <sys/un.h>		/* for Unix domain sockets */
 
 /* Define some port number that can be used for our examples */
 #define	SERV_PORT		 9877			/* TCP and UDP */
@@ -59,6 +60,8 @@ char	*Fgets(char *, int, FILE *);
 FILE	*Fopen(const char *, const char *);
 void	 Fputs(const char *, FILE *);
 
+void	*Malloc(size_t);
+
 const char *Inet_ntop(int, const void *, char *, size_t);
 void  Inet_pton(int, const char *, void *);
 
@@ -76,6 +79,7 @@ int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 int	 Poll(struct pollfd *, unsigned long, int);
 void	 Sendto(int, const void *, size_t, int, const SA *, socklen_t);
 ssize_t	 Recvfrom(int, void *, size_t, int, SA *, socklen_t *);
+char	*Sock_ntop(const SA *, socklen_t);
 
 void	 err_dump(const char *, ...);
 void	 err_msg(const char *, ...);
