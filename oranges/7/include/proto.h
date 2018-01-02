@@ -9,6 +9,8 @@ PUBLIC void     put_color_string(char *info,int color);
 PUBLIC void	disp_color_str(char * info, int color);
 PUBLIC void     enable_irq(u8 value);
 PUBLIC void     disable_irq(u8 value);
+PUBLIC void     disable_int();
+PUBLIC void     enable_int();
 
 PUBLIC void	init_prot();
 PUBLIC void	init_8259A();
@@ -36,12 +38,16 @@ PUBLIC void init_clock();
 
 /* keyboard.c */
 PUBLIC void init_keyboard();
+PUBLIC void keyboard_read();
+
+/* tty.c */
+PUBLIC void task_tty();
 
 /* 以下是系统调用相关 */
 
 /* proc.c */
 PUBLIC  int     sys_get_ticks();        /* sys_call */
-PUBLIC void schedule();
+PUBLIC void     schedule();
 
 /* syscall.s */
 PUBLIC  void    sys_call();             /* int_handler */

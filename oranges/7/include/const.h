@@ -8,6 +8,10 @@
 #define PUBLIC			/* PUBLIC is the opposite of PRIVATE */
 #define PRIVATE static		/* PRIVATE x limits the scope of x */
 
+/* Boolean */
+#define	TRUE	1
+#define	FALSE	0
+
 /* Color */
 /*
  * e.g. MAKE_COLOR(BLUE, RED)
