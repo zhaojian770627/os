@@ -24,3 +24,16 @@ PUBLIC void task_tty()
     keyboard_read();
   }
 }
+
+/*======================================================================*
+				in_process
+ *======================================================================*/
+PUBLIC void in_process(u32 key)
+{
+  char output[2] = {'\0', '\0'};
+
+  if (!(key & FLAG_EXT)) {
+    output[0] = key & 0xFF;
+    put_string(output);
+  }
+}
