@@ -1,6 +1,8 @@
 #include "../include/type.h"
 #include "../include/const.h"
 #include "../include/protect.h"
+#include "../include/tty.h"
+#include "../include/console.h"
 #include "../include/proto.h"
 #include "../include/string.h"
 #include "../include/proc.h"

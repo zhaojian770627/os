@@ -1,6 +1,8 @@
 #include "../include/type.h"
 #include "../include/const.h"
 #include "../include/protect.h"
+#include "../include/tty.h"
+#include "../include/console.h"
 #include "../include/proto.h"
 #include "../include/string.h"
 #include "../include/proc.h"
@@ -50,7 +52,7 @@ PUBLIC void init_keyboard()
 /*======================================================================*
                            keyboard_read
 *======================================================================*/
-PUBLIC void keyboard_read()
+PUBLIC void keyboard_read(TTY* p_tty)
 {
   u8	scan_code;
   char	output[2];
@@ -157,7 +159,7 @@ PUBLIC void keyboard_read()
 	key |= alt_l	? FLAG_ALT_L	: 0;
 	key |= alt_r	? FLAG_ALT_R	: 0;
 			
-	in_process(key);
+	in_process(p_tty,key);
       }
     }
   }

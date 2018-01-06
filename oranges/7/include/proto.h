@@ -42,7 +42,7 @@ PUBLIC void keyboard_read();
 
 /* tty.c */
 PUBLIC void task_tty();
-PUBLIC void in_process(u32 key);
+PUBLIC void in_process(TTY* p_tty,u32 key);
 
 /* 以下是系统调用相关 */
 
@@ -53,3 +53,6 @@ PUBLIC void     schedule();
 /* syscall.s */
 PUBLIC  void    sys_call();             /* int_handler */
 PUBLIC  int     get_ticks();
+
+PUBLIC int is_current_console(CONSOLE* p_con);
+PUBLIC void out_char(CONSOLE* p_con, char ch);
