@@ -34,6 +34,13 @@ PUBLIC void in_process(u32 key)
 
   if (!(key & FLAG_EXT)) {
     output[0] = key & 0xFF;
-    put_string(output);
+    disp_str(output);
+
+    disable_int();
+    out_byte(CRTC_ADDR_REG, CURSOR_H);
+    out_byte(CRTC_DATA_REG, ((disp_pos/2)>>8)&0xFF);
+    out_byte(CRTC_ADDR_REG, CURSOR_L);
+    out_byte(CRTC_DATA_REG, (disp_pos/2)&0xFF);
+    enable_int();
   }
 }
