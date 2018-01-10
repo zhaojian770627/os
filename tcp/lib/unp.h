@@ -73,6 +73,7 @@ int	 Accept(int, SA *, socklen_t *);
 void	 Write(int, void *, size_t);
 void	 Close(int);
 void	 Shutdown(int, int);
+void	 Getsockname(int, SA *, socklen_t *);
 
 void	 Writen(int, void *, size_t);
 int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
