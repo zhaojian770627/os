@@ -44,6 +44,10 @@ PUBLIC void keyboard_read();
 PUBLIC void task_tty();
 PUBLIC void in_process(TTY* p_tty,u32 key);
 
+/* console.c */
+PUBLIC void select_console(int nr_console);
+PUBLIC void init_screen(TTY* p_tty);
+
 /* 以下是系统调用相关 */
 
 /* proc.c */
