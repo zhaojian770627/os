@@ -81,6 +81,7 @@ int	 Poll(struct pollfd *, unsigned long, int);
 void	 Sendto(int, const void *, size_t, int, const SA *, socklen_t);
 ssize_t	 Recvfrom(int, void *, size_t, int, SA *, socklen_t *);
 char	*Sock_ntop(const SA *, socklen_t);
+void	 Setsockopt(int, int, int, const void *, socklen_t);
 
 void	 err_dump(const char *, ...);
 void	 err_msg(const char *, ...);
