@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <fcntl.h> 
+#include <netdb.h>
 #include <sys/wait.h>
 #include <poll.h>
 #include <sys/un.h>		/* for Unix domain sockets */
