@@ -3,9 +3,10 @@ GPATH=../lib
 VPATH=../lib
 CFLAGS+=-g
 OBJECTS=error.o writen.o wrapunix.o wrapsock.o wraplib.o wrapstdio.o sock_ntop.o signal.o
-EXEF:= hostent daytimetcpcli1
+EXEF:= hostent daytimetcpcli1 daytimetcpcli
 all:$(EXEF)
 hostent:hostent.o $(OBJECTS)
 daytimetcpcli1:daytimetcpcli1.o $(OBJECTS)
+daytimetcpcli:daytimetcpcli.o $(OBJECTS) tcp_connect.o sock_ntop_host.o
 clean:
 	$(RM) *.o *.d $(EXEF)

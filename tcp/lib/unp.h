@@ -5,7 +5,9 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-
+#include <sys/time.h>
+#include <sys/ioctl.h>
+#include <sys/sysctl.h>
 #include <time.h>
 
 #include <netinet/in.h>	/* sockaddr_in{} and other Internet defns */
@@ -45,8 +47,8 @@ Sigfunc *Signal(int, Sigfunc *);
 
 ssize_t	 Read(int, void *, size_t);
 ssize_t	 Readline(int, void *, size_t);
-
 ssize_t	 writen(int, const void *, size_t);
+void	 Sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
 void	 str_echo(int);
 void	 str_cli(FILE *, int);
@@ -60,11 +62,14 @@ FILE	*Fdopen(int, const char *);
 char	*Fgets(char *, int, FILE *);
 FILE	*Fopen(const char *, const char *);
 void	 Fputs(const char *, FILE *);
+int	 Ioctl(int, int, void *);
 
 void	*Malloc(size_t);
 
 const char *Inet_ntop(int, const void *, char *, size_t);
 void  Inet_pton(int, const char *, void *);
+char	*sock_ntop_host(const SA *, socklen_t);
+char	*Sock_ntop_host(const SA *, socklen_t);
 
 int	 Socket(int, int, int);
 void	 Connect(int, const SA *, socklen_t);
@@ -75,6 +80,8 @@ void	 Write(int, void *, size_t);
 void	 Close(int);
 void	 Shutdown(int, int);
 void	 Getsockname(int, SA *, socklen_t *);
+void	 Getpeername(int, SA *, socklen_t *);
+int	 Tcp_connect(const char *, const char *);
 
 void	 Writen(int, void *, size_t);
 int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
