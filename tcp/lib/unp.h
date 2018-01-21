@@ -81,6 +81,7 @@ void	 Close(int);
 void	 Shutdown(int, int);
 void	 Getsockname(int, SA *, socklen_t *);
 void	 Getpeername(int, SA *, socklen_t *);
+int	 Tcp_listen(const char *, const char *, socklen_t *);
 int	 Tcp_connect(const char *, const char *);
 
 void	 Writen(int, void *, size_t);
