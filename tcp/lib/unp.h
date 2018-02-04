@@ -50,6 +50,7 @@ ssize_t	 Readline(int, void *, size_t);
 ssize_t	 writen(int, const void *, size_t);
 void	 Sysctl(int *, u_int, void *, size_t *, void *, size_t);
 
+int	 daemon_init(const char *, int);
 void	 str_echo(int);
 void	 str_cli(FILE *, int);
 void	 dg_echo(int, SA *, socklen_t);
