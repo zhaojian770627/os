@@ -1,4 +1,4 @@
-#include "../unp.h"
+#include "../lib/unp.h"
 
 int main(int argc,char **argv)
 {
@@ -14,7 +14,9 @@ int main(int argc,char **argv)
   bzero(&servaddr,sizeof(servaddr));
   strcpy(servaddr.sun_path,UNIXSTR_PATH);
 
-  Bind(listenfd,LISTENQ);
+  Bind(listenfd,(SA*)&servaddr,sizeof(servaddr));
+
+  Listen(listenfd,LISTENQ);
 
   Signal(SIGCHLD,sig_chld);
 
