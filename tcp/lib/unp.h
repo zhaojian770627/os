@@ -28,6 +28,7 @@
 /* Define some port number that can be used for our examples */
 #define	SERV_PORT		 9877			/* TCP and UDP */
 #define	UNIXSTR_PATH	"/tmp/unix.str"	/* Unix domain stream */
+#define	UNIXDG_PATH	"/tmp/unix.dg"	/* Unix domain datagram */
 
 /* Miscellaneous constants */
 #define	MAXLINE		4096	/* max text line length *
