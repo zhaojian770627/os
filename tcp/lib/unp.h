@@ -49,6 +49,7 @@ Sigfunc *Signal(int, Sigfunc *);
 #define	max(a,b)	((a) > (b) ? (a) : (b))
 
 ssize_t	 Read_fd(int, void *, size_t, int *);
+ssize_t	 write_fd(int, void *, size_t, int);
 ssize_t	 Read(int, void *, size_t);
 ssize_t	 Readline(int, void *, size_t);
 ssize_t	 writen(int, const void *, size_t);
