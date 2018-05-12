@@ -20,12 +20,12 @@ int my_open(const char *pathname,int mode)
   Waitpid(childpid,&status,0);
   if(WIFEXITED(status)==0)
     err_quit("child did not terminate");
-  if((status=WSEXITSTATUS(status))==0)
+  if((status=WEXITSTATUS(status))==0)
     Read_fd(sockfd[0],&c,1,&fd);
   else{
     errno=status;		/* set errno value from child's status */
     fd=-1;
   }
-  CLose(sockfd[0]);
+  Close(sockfd[0]);
   return(fd);
 }

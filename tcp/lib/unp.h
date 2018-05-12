@@ -31,7 +31,8 @@
 #define	UNIXDG_PATH	"/tmp/unix.dg"	/* Unix domain datagram */
 
 /* Miscellaneous constants */
-#define	MAXLINE		4096	/* max text line length *
+#define	MAXLINE		4096	/* max text line length */
+#define BUFFSIZE	8192	/* buffer size for reads and writes */
 
 /* Following could be derived from SOMAXCONN in <sys/socket.h>, but many
    kernels still #define it as 5, while actually supporting many more */
@@ -47,6 +48,7 @@ Sigfunc *Signal(int, Sigfunc *);
 #define	min(a,b)	((a) < (b) ? (a) : (b))
 #define	max(a,b)	((a) > (b) ? (a) : (b))
 
+ssize_t	 Read_fd(int, void *, size_t, int *);
 ssize_t	 Read(int, void *, size_t);
 ssize_t	 Readline(int, void *, size_t);
 ssize_t	 writen(int, const void *, size_t);
@@ -89,6 +91,7 @@ int	 Tcp_connect(const char *, const char *);
 int	 Udp_client(const char *, const char *, SA **, socklen_t *);
 int	 Udp_server(const char *, const char *, socklen_t *);
 
+void	 Socketpair(int, int, int, int *);
 void	 Writen(int, void *, size_t);
 int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
 int	 Poll(struct pollfd *, unsigned long, int);
