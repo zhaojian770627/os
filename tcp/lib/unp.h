@@ -91,6 +91,7 @@ int	 Tcp_connect(const char *, const char *);
 int	 Udp_client(const char *, const char *, SA **, socklen_t *);
 int	 Udp_server(const char *, const char *, socklen_t *);
 
+pid_t	 Waitpid(pid_t, int *, int);
 void	 Socketpair(int, int, int, int *);
 void	 Writen(int, void *, size_t);
 int	 Select(int, fd_set *, fd_set *, fd_set *, struct timeval *);
